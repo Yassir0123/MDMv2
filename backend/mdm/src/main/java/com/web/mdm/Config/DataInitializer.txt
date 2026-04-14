@@ -1,0 +1,92 @@
+/*package com.web.mdm.Config;
+
+import com.web.mdm.Models.Compte;
+import com.web.mdm.Repository.CompteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.web.mdm.Models.Users;
+import com.web.mdm.Repository.UsersRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+    @Autowired
+    private CompteRepository compteRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) throws Exception {
+        insertCompteIfNotExists("valerie.martin@mdm.com", "122", Compte.CompteType.Manager, 5);
+        //insertCompteIfNotExists("jean.dupont@mdm.com", "122", Compte.CompteType.Agent, 4);
+    }
+
+    private void insertCompteIfNotExists(String login, String password, Compte.CompteType type, Integer userId) {
+        if (!compteRepository.existsByLogin(login)) {
+            Compte compte = new Compte();
+            compte.setLogin(login);
+            compte.setPassword(passwordEncoder.encode(password));
+            compte.setStatus(Compte.CompteStatus.active);
+            compte.setCompteType(type);
+
+            usersRepository.findById(userId).ifPresent(compte::setUser);
+
+            compteRepository.save(compte);
+            System.out.println("Inserted default account: " + login);
+        } else {
+            System.out.println("Default account already exists: " + login);
+        }
+    }
+}
+*/
+package com.web.mdm.Config;
+
+import com.web.mdm.Models.Compte;
+import com.web.mdm.Repository.CompteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+    @Autowired
+    private CompteRepository compteRepository;
+
+    // You can remove UsersRepository if you are only doing password updates now
+    // @Autowired
+    // private UsersRepository usersRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) throws Exception {
+        // Pass the compte_id (e.g., 1) and the new password you want to set
+        updatePasswordByCompteId(81, "122"); 
+        // updatePasswordByCompteId(2, "newPasswordHere");
+    }
+
+    private void updatePasswordByCompteId(Integer compteId, String newPassword) {
+        compteRepository.findById(compteId).ifPresentOrElse(
+            compte -> {
+                // Encode and set the new password
+                compte.setPassword(passwordEncoder.encode(newPassword));
+                compteRepository.save(compte);
+                System.out.println("Successfully updated password for compte_id: " + compteId);
+            },
+            () -> {
+                // Log if the ID doesn't exist in the database
+                System.out.println("Failed to update: Compte not found with id: " + compteId);
+            }
+        );
+    }
+}

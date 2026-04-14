@@ -1,0 +1,1 @@
+components/assets-mobile-page.tsx(577,29): error TS2304: Cannot find name 'Pagination'.

@@ -1,0 +1,33 @@
+services:
+  mdm-back:
+    build:
+      context: ./backend/mdm
+      dockerfile: Dockerfile
+    container_name: mdm-back
+    ports:
+      - "8080:8080"
+    # IMPORTANT : la base de données SQL Server reste externe (hors Docker).
+    # Les valeurs sensibles sont fournies via le fichier .env à la racine.
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+    networks:
+      - mdm-net
+
+  mdm-front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mdm-front
+    depends_on:
+      - mdm-back
+    ports:
+      - "80:80"
+    networks:
+      - mdm-net
+
+networks:
+  mdm-net:
+    driver: bridge
+

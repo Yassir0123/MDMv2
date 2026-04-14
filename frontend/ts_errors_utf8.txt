@@ -1,0 +1,17 @@
+﻿components/assets-mobile-page-manager.tsx(544,9): error TS1005: ')' expected.
+components/assets-mobile-page-manager.tsx(615,5): error TS1128: Declaration or statement expected.
+components/assets-mobile-page-manager.tsx(616,3): error TS1109: Expression expected.
+components/assets-mobile-page-manager.tsx(617,1): error TS1128: Declaration or statement expected.
+components/assets-sim-page-manager.tsx(437,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+components/assets-sim-page-manager.tsx(534,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+components/assets-sim-page-manager.tsx(592,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+components/assets-sim-page-manager.tsx(685,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+components/assets-sim-page-manager.tsx(688,64): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+components/assets-sim-page-manager.tsx(689,3): error TS1109: Expression expected.
+components/assets-sim-page-manager.tsx(691,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+components/assets-sim-page-manager.tsx(693,95): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+components/assets-sim-page-manager.tsx(697,12): error TS1005: '</' expected.
+components/assets-sim-page.tsx(943,9): error TS1005: ')' expected.
+components/assets-sim-page.tsx(1054,5): error TS1128: Declaration or statement expected.
+components/assets-sim-page.tsx(1055,3): error TS1109: Expression expected.
+components/assets-sim-page.tsx(1056,1): error TS1128: Declaration or statement expected.
