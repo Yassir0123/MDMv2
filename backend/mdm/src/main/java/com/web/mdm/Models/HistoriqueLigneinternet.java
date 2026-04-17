@@ -6,7 +6,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 @Entity
-public class HistoriqueLigneinternet {
+public class HistoriqueLigneinternet implements AdminTrackedHistory, ManagerTrackedHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -26,6 +26,10 @@ public class HistoriqueLigneinternet {
 
     private Integer userId;
     private String userNom;
+    @Column(name = "admin_id")
+    private Integer adminId;
+    @Column(name = "manager_id")
+    private Integer managerId;
     private String agenceNom;
     private String departementNom;
     private String entrepotNom;
@@ -183,6 +187,27 @@ public class HistoriqueLigneinternet {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public Integer getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Integer adminId) {
+        this.adminId = adminId;
+    }
+
+    public Integer getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(Integer managerId) {
+        this.managerId = managerId;
+    }
+
+    @Override
+    public Integer resolveTargetUserId() {
+        return userId;
     }
 
     public String getUserNom() {

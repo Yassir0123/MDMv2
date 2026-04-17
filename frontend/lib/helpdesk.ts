@@ -1,5 +1,63 @@
 export type HelpdeskScope = "ALL" | "MYTICKETS" | "TAGGED" | "TARGETED"
 
+export type HelpdeskSyncPayload = {
+  ticketId?: number
+  reason?: "claim" | "create" | "message" | "admin-save" | "refresh"
+}
+
+const HELPDESK_SYNC_EVENT = "mdm:helpdesk-sync"
+const HELPDESK_CHANNEL_NAME = "mdm-helpdesk-sync"
+
+function openHelpdeskChannel() {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") {
+    return null
+  }
+  return new BroadcastChannel(HELPDESK_CHANNEL_NAME)
+}
+
+export function emitHelpdeskSync(payload: HelpdeskSyncPayload = {}) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent<HelpdeskSyncPayload>(HELPDESK_SYNC_EVENT, { detail: payload }))
+  }
+
+  const channel = openHelpdeskChannel()
+  if (!channel) return
+
+  try {
+    channel.postMessage({ ...payload, timestamp: Date.now() })
+  } finally {
+    channel.close()
+  }
+}
+
+export function subscribeHelpdeskSync(
+  callback: (payload: HelpdeskSyncPayload) => void
+) {
+  if (typeof window === "undefined") {
+    return () => undefined
+  }
+
+  const handleWindowEvent = (event: Event) => {
+    const customEvent = event as CustomEvent<HelpdeskSyncPayload>
+    callback(customEvent.detail || {})
+  }
+
+  window.addEventListener(HELPDESK_SYNC_EVENT, handleWindowEvent as EventListener)
+
+  const channel = openHelpdeskChannel()
+  const handleChannelMessage = (event: MessageEvent<HelpdeskSyncPayload>) => {
+    callback(event.data || {})
+  }
+
+  channel?.addEventListener("message", handleChannelMessage as EventListener)
+
+  return () => {
+    window.removeEventListener(HELPDESK_SYNC_EVENT, handleWindowEvent as EventListener)
+    channel?.removeEventListener("message", handleChannelMessage as EventListener)
+    channel?.close()
+  }
+}
+
 export interface HelpdeskUserOption {
   id: number
   name: string

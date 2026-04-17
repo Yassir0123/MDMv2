@@ -16,6 +16,8 @@ public class MaterielSyncService {
     private MaterielRepository materielRepository;
     @Autowired
     private HistoriqueMaterielRepository histRepo;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     // --- SYNC INVENTORY ---
     @Transactional
@@ -96,6 +98,6 @@ public class MaterielSyncService {
         h.setDateEnvoie(event.contains("AFFECTATION") ? dateEvent : null);
         h.setDateAnnuler(event.equals("RESILIATION") ? dateEvent : null);
 
-        histRepo.save(h);
+        histRepo.save(historyAdminStampService.stamp(h));
     }
 }

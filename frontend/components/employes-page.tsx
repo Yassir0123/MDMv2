@@ -1,9 +1,10 @@
 ﻿
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Users, UserCheck, UserX, Search, Filter, Plus, X, RotateCw,
   ChevronUp, ChevronDown, ArrowUpDown, Eye, ChevronLeft, ChevronRight,
@@ -212,6 +213,7 @@ export default function EmployesPage() {
   const [users, setUsers] = useState<UserEntity[]>([])
   const [usersById, setUsersById] = useState<Record<number, UserEntity>>({})
   const [loading, setLoading] = useState(true)
+  const hasLoadedUsersRef = useRef(false)
 
   const [filters, setFilters] = useState<FilterRule[]>([{ id: "1", attribute: "nom", condition: "contains", term: "" }])
   const [sortBy, setSortBy] = useState("id")
@@ -241,21 +243,29 @@ export default function EmployesPage() {
     fetchUsers()
   }, [])
 
+  useVisiblePolling(() => fetchUsers(), 4000, [])
+
   const fetchUsers = async () => {
+    const shouldShowLoading = !hasLoadedUsersRef.current
     try {
-      setLoading(true)
+      if (shouldShowLoading) {
+        setLoading(true)
+      }
       const res = await api.get("/users")
       const list = Array.isArray(res.data) ? res.data : []
       setUsers(list)
       const map: Record<number, UserEntity> = {}
       list.forEach(u => { if (u.id != null) map[u.id] = u })
       setUsersById(map)
+      hasLoadedUsersRef.current = true
     } catch (e) {
       console.error("Failed to fetch users", e)
       setUsers([])
       setUsersById({})
     } finally {
-      setLoading(false)
+      if (shouldShowLoading) {
+        setLoading(false)
+      }
     }
   }
 

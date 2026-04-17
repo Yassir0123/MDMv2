@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, Plus, Trash2, Edit2, Eye, X,
    ArrowUpDown, User, Filter, ChevronUp, ChevronDown,
@@ -216,6 +217,7 @@ export default function AdminDepartmentsPage() {
    // --- STATE ---
    const [departements, setDepartements] = useState<Departement[]>([])
    const [loading, setLoading] = useState(true)
+   const hasLoadedDepartementsRef = useRef(false)
    const [viewMode, setViewMode] = useState<ViewMode>("list")
    const [selectedDept, setSelectedDept] = useState<Departement | null>(null)
 
@@ -248,13 +250,32 @@ export default function AdminDepartmentsPage() {
       fetchUsers()
    }, [])
 
+   useVisiblePolling(() => {
+      void fetchDepartements()
+      void fetchUsers()
+   }, 4000, [])
+
+   useVisiblePolling(() => {
+      if (viewMode === "detail" && selectedDept?.id) {
+         void fetchHistorique(selectedDept.id)
+      }
+   }, 4000, [viewMode, selectedDept?.id])
+
    const fetchDepartements = async () => {
+      const shouldShowLoading = !hasLoadedDepartementsRef.current
       try {
-         setLoading(true)
+         if (shouldShowLoading) {
+            setLoading(true)
+         }
          const res = await api.get("/departements")
          setDepartements(Array.isArray(res.data) ? res.data : [])
+         hasLoadedDepartementsRef.current = true
       } catch (e) { console.error(e) }
-      finally { setLoading(false) }
+      finally {
+         if (shouldShowLoading) {
+            setLoading(false)
+         }
+      }
    }
 
    const fetchUsers = async () => {
@@ -733,7 +754,8 @@ export default function AdminDepartmentsPage() {
 
             {/* Main Table */}
             <div className={styles.card}>
-               <table className="w-full min-w-[600px]">
+               <div className="overflow-x-auto">
+               <table className="w-full min-w-[820px]">
                   <thead>
                      <tr>
                         <th className={styles.th}>ID</th>
@@ -797,6 +819,7 @@ export default function AdminDepartmentsPage() {
                      ))}
                   </tbody>
                </table>
+               </div>
                {totalPages > 1 && (
                   <Pagination current={page} total={totalPages} setPage={setPage} />
                )}

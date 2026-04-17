@@ -1,9 +1,10 @@
 ﻿"use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, RotateCw, History,
    Smartphone, Wifi, CircuitBoard, Package,
@@ -130,6 +131,7 @@ export default function ChefAgenceMaterielHistoriquePage() {
    const [rows, setRows] = useState<HistoriqueMaterielRow[]>([])
    const [loading, setLoading] = useState(true)
    const [error, setError] = useState<string | null>(null)
+   const hasLoadedRowsRef = useRef(false)
 
    const [filters, setFilters] = useState<FilterRule[]>([
       { id: "1", attribute: "materielName", condition: "contains", term: "" }
@@ -142,48 +144,50 @@ export default function ChefAgenceMaterielHistoriquePage() {
    const [isExporting, setIsExporting] = useState(false)
    const PAGE_SIZE = 12
 
-   useEffect(() => {
-      let mounted = true
-      const run = async () => {
-         if (!managerId) {
-            setLoading(false)
-            setError("Identifiant manager introuvable.")
+   const fetchHistoryRows = async () => {
+      if (!managerId) {
+         setError("Identifiant manager introuvable.")
+         hasLoadedRowsRef.current = true
+         setLoading(false)
+         return
+      }
+      try {
+         if (!hasLoadedRowsRef.current) {
+            setLoading(true)
+         }
+         setError(null)
+
+         const subRes = await api.get("/subordinates", { params: { managerId } })
+         const subordinates: Subordinate[] = Array.isArray(subRes.data) ? subRes.data : []
+
+         if (subordinates.length === 0) {
+            setRows([])
             return
          }
-         try {
-            setLoading(true)
-            setError(null)
 
-            const subRes = await api.get("/subordinates", { params: { managerId } })
-            const subordinates: Subordinate[] = Array.isArray(subRes.data) ? subRes.data : []
+         const historyRes = await Promise.all(
+            subordinates.map((s) => api.get(`/historique-materiel/user/${s.id}`).catch(() => ({ data: [] })))
+         )
 
-            if (subordinates.length === 0) {
-               if (!mounted) return
-               setRows([])
-               return
-            }
-
-            const historyRes = await Promise.all(
-               subordinates.map((s) => api.get(`/historique-materiel/user/${s.id}`).catch(() => ({ data: [] })))
-            )
-
-            const allRows = historyRes.flatMap((res) => Array.isArray(res.data) ? res.data : [])
-
-            if (!mounted) return
-            setRows(allRows)
-         } catch (e) {
-            console.error(e)
-            if (!mounted) return
-            setRows([])
-            setError("Impossible de charger l'historique.")
-         } finally {
-            if (mounted) setLoading(false)
-         }
+         const allRows = historyRes.flatMap((res) => Array.isArray(res.data) ? res.data : [])
+         setRows(allRows)
+      } catch (e) {
+         console.error(e)
+         setRows([])
+         setError("Impossible de charger l'historique.")
+      } finally {
+         hasLoadedRowsRef.current = true
+         setLoading(false)
       }
+   }
 
-      run()
-      return () => { mounted = false }
+   useEffect(() => {
+      void fetchHistoryRows()
    }, [managerId])
+
+   useVisiblePolling(() => {
+      void fetchHistoryRows()
+   }, 5000, [managerId])
 
    const handleResetFilters = () => {
       setFilters([{ id: "1", attribute: "materielName", condition: "contains", term: "" }])

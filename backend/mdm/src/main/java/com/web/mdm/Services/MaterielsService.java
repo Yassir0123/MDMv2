@@ -33,6 +33,8 @@ public class MaterielsService {
     private DepartementRepository departementRepository;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<Materiels> getAll() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -288,7 +290,7 @@ public class MaterielsService {
             h.setDepartementNom(dept.getNom());
         }
 
-        historyRepository.save(h);
+        historyRepository.save(historyAdminStampService.stamp(h));
     }
 
     private void syncUnified(Materiels mat, String event, Users user, Agence agence, Entrepot entrepot,

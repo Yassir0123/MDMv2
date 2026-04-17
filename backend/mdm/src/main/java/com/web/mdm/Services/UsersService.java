@@ -35,6 +35,8 @@ public class UsersService {
     private NotificationService notificationService;
     @Autowired
     private CompteRepository compteRepository;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<Users> getAll() {
         return usersRepository.findAllWithAssociations();
@@ -61,7 +63,7 @@ public class UsersService {
         Users user = usersRepository.findById(userId).orElseThrow();
 
         HistoriqueAffectation hist = buildHistorique(user, "dettacher", motif, managerId);
-        historiqueAffectationRepository.save(hist);
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         user.setStatus(Users.UserStatus.detacher);
         user.setDateDetacher(LocalDate.now());
@@ -76,7 +78,7 @@ public class UsersService {
 
         // 1. Log HistoriqueAffectation
         HistoriqueAffectation hist = buildHistorique(user, "desactiver", motif, managerId);
-        historiqueAffectationRepository.save(hist);
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         // 2. Unassign all materials
         List<Materiel> materiels = materielRepository.findByAffectedUserId(userId);
@@ -145,7 +147,7 @@ public class UsersService {
         user.setStatus(Users.UserStatus.active);
 
         HistoriqueAffectation hist = buildHistorique(user, "reaffectation", "Réaffectation", managerId);
-        historiqueAffectationRepository.save(hist);
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         Users saved = usersRepository.save(user);
         notificationService.notifyAdminManagementReaffectation(saved);
@@ -162,6 +164,8 @@ public class UsersService {
             compte.setStatus(Compte.CompteStatus.active);
         }
         Users saved = usersRepository.save(user);
+        HistoriqueAffectation hist = buildHistorique(saved, "reactivation", "Reactivation", saved.getManagerId());
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
         notificationService.notifyAdminReactivation(saved);
         return saved;
     }

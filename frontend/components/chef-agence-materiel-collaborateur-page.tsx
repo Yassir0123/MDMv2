@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import {
    Package, CheckCircle2, AlertCircle, Users,
    Search, RotateCw, ArrowUpDown, X, ShieldAlert,
@@ -66,6 +66,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
    const [rows, setRows] = useState<RowItem[]>([])
    const [allMateriels, setAllMateriels] = useState<MaterielItem[]>([])
    const [loading, setLoading] = useState(true)
+   const hasLoadedRowsRef = useRef(false)
    const [error, setError] = useState<string | null>(null)
 
    // Advanced Filter State
@@ -87,6 +88,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
    useEffect(() => {
       let mounted = true
       const run = async () => {
+         const shouldShowLoading = !hasLoadedRowsRef.current
          if (!managerId) {
             setLoading(false)
             setError("Identifiant manager introuvable.")
@@ -94,7 +96,9 @@ export default function ChefAgenceMaterielCollaborateurPage() {
          }
 
          try {
-            setLoading(true)
+            if (shouldShowLoading) {
+               setLoading(true)
+            }
             setError(null)
 
             const subRes = await api.get("/subordinates", { params: { managerId } })
@@ -105,6 +109,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
             if (subList.length === 0) {
                setRows([])
                setAllMateriels([])
+               hasLoadedRowsRef.current = true
                return
             }
 
@@ -142,6 +147,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
             if (!mounted) return
             setAllMateriels(all)
             setRows(pendingRows)
+            hasLoadedRowsRef.current = true
          } catch (e) {
             console.error(e)
             if (!mounted) return
@@ -149,7 +155,9 @@ export default function ChefAgenceMaterielCollaborateurPage() {
             setAllMateriels([])
             setError("Impossible de charger les données.")
          } finally {
-            if (mounted) setLoading(false)
+            if (mounted && shouldShowLoading) {
+               setLoading(false)
+            }
          }
       }
 
@@ -157,10 +165,33 @@ export default function ChefAgenceMaterielCollaborateurPage() {
       return () => { mounted = false }
    }, [managerId])
 
+   useEffect(() => {
+      if (!managerId) return
+
+      const refreshVisibleRows = () => {
+         if (document.visibilityState === "visible") {
+            void refresh()
+         }
+      }
+
+      const interval = window.setInterval(refreshVisibleRows, 4000)
+      window.addEventListener("focus", refreshVisibleRows)
+      document.addEventListener("visibilitychange", refreshVisibleRows)
+
+      return () => {
+         window.clearInterval(interval)
+         window.removeEventListener("focus", refreshVisibleRows)
+         document.removeEventListener("visibilitychange", refreshVisibleRows)
+      }
+   }, [managerId])
+
    const refresh = async () => {
       if (!managerId) return
+      const shouldShowLoading = !hasLoadedRowsRef.current
       try {
-         setLoading(true)
+         if (shouldShowLoading) {
+            setLoading(true)
+         }
          setError(null)
          const subRes = await api.get("/subordinates", { params: { managerId } })
          const subList: Subordinate[] = Array.isArray(subRes.data) ? subRes.data : []
@@ -199,13 +230,16 @@ export default function ChefAgenceMaterielCollaborateurPage() {
 
          setAllMateriels(all)
          setRows(pendingRows)
+         hasLoadedRowsRef.current = true
       } catch (e) {
          console.error(e)
          setRows([])
          setAllMateriels([])
          setError("Impossible de charger les données.")
       } finally {
-         setLoading(false)
+         if (shouldShowLoading) {
+            setLoading(false)
+         }
       }
    }
 
@@ -505,7 +539,8 @@ export default function ChefAgenceMaterielCollaborateurPage() {
 
             {/* Main Table */}
             <div className={styles.card}>
-               <table className="w-full">
+               <div className="overflow-x-auto">
+               <table className="w-full min-w-[980px]">
                   <thead>
                      <tr>
                         {[
@@ -598,6 +633,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
                      )}
                   </tbody>
                </table>
+               </div>
             </div>
 
             {/* Confirm Reception Modal (same design as chef-agence-materiel-affecte-page) */}

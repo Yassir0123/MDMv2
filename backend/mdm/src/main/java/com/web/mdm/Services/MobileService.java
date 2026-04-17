@@ -32,6 +32,8 @@ public class MobileService {
     private ArchiveService archiveService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<Mobile> getAll() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -103,7 +105,7 @@ public class MobileService {
                 if (saved.getEntrepot().getSiteRef() != null)
                     history.setEntrepotNom(saved.getEntrepot().getSiteRef().getLibeller());
             }
-            historyRepository.save(history);
+            historyRepository.save(historyAdminStampService.stamp(history));
 
             // 2. Unified Sync
             syncService.syncInventory("Mobile", saved.getId(), saved.getSn(), null,
@@ -220,7 +222,7 @@ public class MobileService {
         history.setStatusEvent(event);
         history.setDateEvent(LocalDate.now());
         history.setDateEnvoie(LocalDate.now());
-        historyRepository.save(history);
+        historyRepository.save(historyAdminStampService.stamp(history));
 
         // Update Mobile - Store ALL user IDs
         mobile.setUser(user);
@@ -261,7 +263,7 @@ public class MobileService {
         history.setStatusEvent(event);
         history.setDateEvent(LocalDate.now());
         history.setDateEnvoie(LocalDate.now());
-        historyRepository.save(history);
+        historyRepository.save(historyAdminStampService.stamp(history));
 
         // Update Mobile
         mobile.setUser(null);
@@ -325,7 +327,7 @@ public class MobileService {
             history.setStatusEvent("DESAFFECTATION");
             history.setDateEvent(LocalDate.now());
             history.setDateRecu(LocalDate.now());
-            historyRepository.save(history);
+            historyRepository.save(historyAdminStampService.stamp(history));
 
             // Unified History Log
             syncService.syncHistory("Mobile", mobile.getId(), mobile.getSn(), null, null,

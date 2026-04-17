@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
   Power, AlertCircle, Globe, Activity, ArrowUpDown,
@@ -76,9 +77,13 @@ export default function ManagerAssetsInternetPage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchLines(), 4000, [])
+
   const fetchLines = async () => {
     try {
-      setLoading(true)
+      if (lines.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/lignes-internet")
       setLines(Array.isArray(res.data) ? res.data : [])
     } catch (e) { console.error(e); setLines([]) }
@@ -523,5 +528,3 @@ export default function ManagerAssetsInternetPage() {
 }
 
 const KpiCard = ({ label, value, icon: Icon, color }: any) => (<div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden`}><div className={`absolute top-0 right-0 p-3 opacity-10 text-${color}-600`}><Icon className="w-16 h-16" /></div><p className="text-slate-500 text-[10px] font-bold uppercase mb-1">{label}</p><p className={`text-3xl font-black text-${color}-600`}>{value}</p></div>)
-
-

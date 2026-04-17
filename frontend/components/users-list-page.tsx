@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import api from "@/lib/api"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, Plus, Trash2, Edit2, X,
    ArrowUpDown, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
@@ -219,9 +220,16 @@ export default function AdminAccountsPage() {
       fetchUsers()
    }, [])
 
+   useVisiblePolling(() => {
+      void fetchComptes()
+      void fetchUsers()
+   }, 4000, [])
+
    const fetchComptes = async () => {
       try {
-         setLoading(true)
+         if (comptes.length === 0) {
+            setLoading(true)
+         }
          const res = await api.get("/comptes")
          setComptes(Array.isArray(res.data) ? res.data : [])
       } catch (e) {
@@ -433,7 +441,8 @@ export default function AdminAccountsPage() {
 
             {/* Main Table */}
             <div className={styles.card}>
-               <table className="w-full min-w-[700px]">
+               <div className="overflow-x-auto">
+               <table className="w-full min-w-[980px]">
                   <thead>
                      <tr>
                         <th className={styles.th}>ID</th>
@@ -522,6 +531,7 @@ export default function AdminAccountsPage() {
                      })}
                   </tbody>
                </table>
+               </div>
                {totalPages > 1 && (
                   <Pagination current={page} total={totalPages} setPage={setPage} />
                )}

@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw,
   Eye, Link2, Unlink2, RefreshCw, ShieldCheck,
@@ -345,9 +346,19 @@ export default function AssetsSIMPage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchSims(), 4000, [])
+
+  useVisiblePolling(() => {
+    if (viewMode === "view" && selectedSim?.id) {
+      void fetchSimHistory(selectedSim.id)
+    }
+  }, 4000, [viewMode, selectedSim?.id])
+
   const fetchSims = async () => {
     try {
-      setLoading(true)
+      if (sims.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/cartesims")
       setSims(Array.isArray(res.data) ? res.data : [])
     } catch (e) { console.error(e); setSims([]) }
@@ -368,6 +379,27 @@ export default function AssetsSIMPage() {
       const resUsers = await api.get("/users").catch(() => ({ data: [] }))
       setUsersList(Array.isArray(resUsers.data) ? resUsers.data : [])
     } catch (e) { console.error(e) }
+  }
+
+  const fetchSimHistory = async (simId: number) => {
+    try {
+      const res = await api.get("/historique-cartesim")
+      const simHistory = Array.isArray(res.data) ? res.data
+        .filter((h: any) => h.materiel?.id === simId)
+        .map((h: any) => ({
+          id: h.id,
+          action: h.statusEvent,
+          utilisateur: (h.userNom && h.userPrenom)
+            ? `${h.userNom} ${h.userPrenom}`
+            : (h.user ? `${h.user.nom} ${h.user.prenom}` : "Systéme / Stock"),
+          entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || null,
+          agenceNom: h.agenceNom || h.agence?.nom || null,
+          departementNom: h.departementNom || h.departement?.nom || null,
+          chefAgence: h.chefAgenceNom || "-",
+          date: h.dateEvent
+        })) : []
+      setHistory(simHistory)
+    } catch (e) { setHistory([]) }
   }
 
   // --- LOGIC ---
@@ -535,26 +567,8 @@ export default function AssetsSIMPage() {
   const handleView = async (sim: CarteSim) => {
     setSelectedSim(sim)
     setViewMode("view")
-    try {
-      const res = await api.get("/historique-cartesim")
-      const simHistory = Array.isArray(res.data) ? res.data
-        .filter((h: any) => h.materiel?.id === sim.id)
-        .map((h: any) => {
-          return {
-            id: h.id,
-            action: h.statusEvent,
-            utilisateur: (h.userNom && h.userPrenom)
-              ? `${h.userNom} ${h.userPrenom}`
-              : (h.user ? `${h.user.nom} ${h.user.prenom}` : "Systéme / Stock"),
-            entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || null,
-            agenceNom: h.agenceNom || h.agence?.nom || null,
-            departementNom: h.departementNom || h.departement?.nom || null,
-            chefAgence: h.chefAgenceNom || "-",
-            date: h.dateEvent
-          }
-        }) : []
-      setHistory(simHistory)
-    } catch (e) { setHistory([]) }
+    setHistoryPage(1)
+    await fetchSimHistory(sim.id)
   }
 
   const handleSave = async () => {
@@ -1199,4 +1213,3 @@ export default function AssetsSIMPage() {
     </div>
   )
 }
-

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-public class HistoriqueAffectation {
+public class HistoriqueAffectation implements AdminTrackedHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -13,6 +13,9 @@ public class HistoriqueAffectation {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
+
+    @Column(name = "admin_id")
+    private Integer adminId;
 
     private String userNom;
     private String userPrenom;
@@ -84,6 +87,14 @@ public class HistoriqueAffectation {
 
     public void setUser(Users user) {
         this.user = user;
+    }
+
+    public Integer getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Integer adminId) {
+        this.adminId = adminId;
     }
 
     public String getUserNom() {

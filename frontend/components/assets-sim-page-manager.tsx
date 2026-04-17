@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw,
   Eye, Link2, Unlink2, RefreshCw, ShieldCheck,
@@ -97,9 +98,13 @@ export default function ManagerAssetsSIMPage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchSims(), 4000, [])
+
   const fetchSims = async () => {
     try {
-      setLoading(true)
+      if (sims.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/cartesims")
       setSims(Array.isArray(res.data) ? res.data : [])
     } catch (e) {
@@ -747,4 +752,3 @@ const SortableTh = ({ label, sortKey, currentSort, setSort, styles, SortIcon }: 
     <div className="flex items-center gap-2">{label} <SortIcon column={sortKey} sortBy={currentSort} sortOrder="asc" /></div>
   </th>
 )
-

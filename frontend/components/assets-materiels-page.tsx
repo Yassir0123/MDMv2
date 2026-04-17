@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
   Link2, Unlink2, RefreshCw, Monitor, Printer,
@@ -217,9 +218,19 @@ export default function AssetsMaterielsPage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchMateriels(), 4000, [])
+
+  useVisiblePolling(() => {
+    if (viewMode === "view" && selectedItem?.id) {
+      void fetchMaterielHistory(selectedItem.id)
+    }
+  }, 4000, [viewMode, selectedItem?.id])
+
   const fetchMateriels = async () => {
     try {
-      setLoading(true)
+      if (materiels.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/materiels")
       setMateriels(Array.isArray(res.data) ? res.data : [])
     } catch (e) { console.error(e); setMateriels([]) }
@@ -239,6 +250,25 @@ export default function AssetsMaterielsPage() {
       setDepartements(Array.isArray(resDepts.data) ? resDepts.data : [])
       setUsersList(Array.isArray(resUsers.data) ? resUsers.data : [])
     } catch (e) { console.error(e) }
+  }
+
+  const fetchMaterielHistory = async (materielId: number) => {
+    try {
+      const res = await api.get(`/historique-materiels/${materielId}`)
+      const hist = Array.isArray(res.data) ? res.data.map((h: any) => ({
+        id: h.id,
+        action: h.statusEvent,
+        utilisateur: (h.userNom && h.userPrenom)
+          ? `${h.userNom} ${h.userPrenom}`
+          : (h.userNom ? h.userNom : "Système / Stock"),
+        entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || "-",
+        agenceNom: h.agenceNom || (h.agence?.nom) || "-",
+        departementNom: h.departementNom || (h.departement?.nom) || "-",
+        chefAgence: h.chefAgenceNom || "-",
+        date: h.dateEvent
+      })) : []
+      setHistory(hist)
+    } catch (e) { setHistory([]) }
   }
 
   // --- LOGIC ---
@@ -451,22 +481,8 @@ export default function AssetsMaterielsPage() {
   const handleView = async (item: Materiel) => {
     setSelectedItem(item)
     setViewMode("view")
-    try {
-      const res = await api.get(`/historique-materiels/${item.id}`)
-      const hist = Array.isArray(res.data) ? res.data.map((h: any) => ({
-        id: h.id,
-        action: h.statusEvent,
-        utilisateur: (h.userNom && h.userPrenom)
-          ? `${h.userNom} ${h.userPrenom}`
-          : (h.userNom ? h.userNom : "Système / Stock"),
-        entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || "-",
-        agenceNom: h.agenceNom || (h.agence?.nom) || "-",
-        departementNom: h.departementNom || (h.departement?.nom) || "-",
-        chefAgence: h.chefAgenceNom || "-",
-        date: h.dateEvent
-      })) : []
-      setHistory(hist)
-    } catch (e) { setHistory([]) }
+    setHistoryPage(1)
+    await fetchMaterielHistory(item.id)
   }
 
   const handleSave = async () => {
@@ -1182,4 +1198,3 @@ export default function AssetsMaterielsPage() {
     </div>
   )
 }
-

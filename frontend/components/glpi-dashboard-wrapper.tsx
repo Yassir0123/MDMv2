@@ -12,11 +12,11 @@ import AssetsSIMPage from "@/components/assets-sim-page"
 import AssetsInternetPage from "@/components/assets-internet-page"
 import AssetsMobilePage from "@/components/assets-mobile-page"
 import AffectationMaterielPage from "@/components/affectation-materiel-page"
-import AffectationHistoryPage from "@/components/affectation-history-page-new"
 import UsersManagementPage from "@/components/users-management-page"
 import UserDashboardPage from "@/components/user-dashboard-page"
 import UserMaterielUnifiedPage from "@/components/user-materiel-unified-page"
 import UserAssignmentHistoryPage from "@/components/user-assignment-history-page"
+import UserHistoryPage from "@/components/users-history-page"
 import { LogOut, Home, PanelLeft, UserIcon, ChevronDown, Settings, Search, Moon, Sun } from "lucide-react"
 import NotificationsButton from "@/components/notifications-button"
 import NotificationsPage from "@/components/notifications-page"
@@ -35,6 +35,7 @@ import AgencePage from "@/components/agence-page"
 import AgenceDepartmentsPage from "@/components/agence-departments-page"
 import EmployesPage from "@/components/employes-page"
 import HelpdeskTicketsPage from "@/components/helpdesk-tickets-page"
+import { subscribeAppDataSync } from "@/lib/app-data-sync"
 
 type Page =
   | "dashboard"
@@ -202,6 +203,16 @@ export default function GLPIDashboardWrapper() {
     setPageKey(prev => prev + 1)
   }
 
+  useEffect(() => {
+    return subscribeAppDataSync(() => {
+      if (currentPage === "helpdesk-tickets" || currentPage === "user-notifications" || currentPage === "users") {
+        return
+      }
+
+      setPageKey((prev) => prev + 1)
+    })
+  }, [currentPage])
+
   /* const mockNotifications = [
     {
       id: "notif-1",
@@ -290,7 +301,7 @@ export default function GLPIDashboardWrapper() {
         case "affectation":
           return <AffectationMaterielPage />
         case "affectation-history":
-          return <AffectationHistoryPage />
+          return <UserHistoryPage onBack={() => navigateTo("dashboard")} />
         case "users":
           return <UsersManagementPage />
         case "user-assignment-history":

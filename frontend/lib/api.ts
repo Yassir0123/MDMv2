@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { emitAppDataSync } from '@/lib/app-data-sync';
+import { emitNotificationsRefresh } from '@/lib/notification-sync';
 
 // 1. Create Axios instance
 const api = axios.create({
@@ -23,6 +25,26 @@ api.interceptors.request.use(
 // 3. RESPONSE Interceptor (Handles Expiration)
 api.interceptors.response.use(
   (response) => {
+    const method = (response.config?.method || '').toLowerCase();
+    const url = response.config?.url || '';
+    const shouldTriggerNotificationsRefresh =
+      ["post", "put", "patch", "delete"].includes(method) &&
+      !url.includes('/auth/login') &&
+      !url.includes('/notifications');
+    const shouldTriggerAppDataSync =
+      ["post", "put", "patch", "delete"].includes(method) &&
+      !url.includes('/auth/login') &&
+      !url.includes('/notifications/read') &&
+      !url.includes('/notifications');
+
+    if (shouldTriggerNotificationsRefresh) {
+      emitNotificationsRefresh(`api:${method}:${url}`);
+    }
+
+    if (shouldTriggerAppDataSync) {
+      emitAppDataSync(`api:${method}:${url}`);
+    }
+
     return response; // Request was successful
   },
   (error) => {

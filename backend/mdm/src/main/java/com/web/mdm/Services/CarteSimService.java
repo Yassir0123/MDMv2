@@ -32,6 +32,8 @@ public class CarteSimService {
     private ArchiveService archiveService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<CarteSim> getAll() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -85,7 +87,7 @@ public class CarteSimService {
 
             history.setStatusEvent("CREATION");
             history.setDateEvent(LocalDate.now());
-            historyRepository.save(history);
+            historyRepository.save(historyAdminStampService.stamp(history));
 
             // 2. Sync
             syncService.syncInventory("CarteSim", savedSim.getId(), savedSim.getSn(), savedSim.getNumero(),
@@ -177,7 +179,7 @@ public class CarteSimService {
         history.setStatusEvent(eventType);
         history.setDateEvent(LocalDate.now());
         history.setDateEnvoie(LocalDate.now());
-        historyRepository.save(history);
+        historyRepository.save(historyAdminStampService.stamp(history));
 
         // 2. Update SIM - Store ALL user IDs
         sim.setUser(user);
@@ -222,7 +224,7 @@ public class CarteSimService {
             history.setStatusEvent("DESAFFECTATION");
             history.setDateEvent(LocalDate.now());
             history.setDateRecu(LocalDate.now());
-            historyRepository.save(history);
+            historyRepository.save(historyAdminStampService.stamp(history));
 
             syncService.syncHistory("CarteSim", sim.getId(), sim.getSn(), sim.getNumero(),
                     sim.getOperateur(), "Carte SIM " + sim.getNumero(),

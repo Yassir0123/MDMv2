@@ -153,6 +153,7 @@ export default function UserSubordinatesPageRH() {
    const [subordinates, setSubordinates] = useState<UserEntity[]>([])
    const [usersById, setUsersById] = useState<Record<number, UserEntity>>({})
    const [loading, setLoading] = useState(true)
+   const hasLoadedSubordinatesRef = useRef(false)
    const [pendingByUser, setPendingByUser] = useState<Record<number, MaterielItem[]>>({})
    const [loadingPending, setLoadingPending] = useState<Record<number, boolean>>({})
 
@@ -190,8 +191,11 @@ export default function UserSubordinatesPageRH() {
    }, [currentUser])
 
    const fetchSubordinates = async () => {
+      const shouldShowLoading = !hasLoadedSubordinatesRef.current
       try {
-         setLoading(true)
+         if (shouldShowLoading) {
+            setLoading(true)
+         }
          const res = await api.get("/users")
          const allUsers: UserEntity[] = Array.isArray(res.data) ? res.data : []
          const map: Record<number, UserEntity> = {}
@@ -203,7 +207,12 @@ export default function UserSubordinatesPageRH() {
          setSubordinates(filteredList)
          // fetch pending for all subordinates
          fetchAllPending(filteredList)
-      } catch (e) { console.error(e) } finally { setLoading(false) }
+         hasLoadedSubordinatesRef.current = true
+      } catch (e) { console.error(e) } finally {
+         if (shouldShowLoading) {
+            setLoading(false)
+         }
+      }
    }
 
    const fetchAllPending = async (list: UserEntity[]) => {
@@ -298,6 +307,13 @@ export default function UserSubordinatesPageRH() {
       } catch { }
    }
 
+   const refreshViewingEquipment = async (userId: number) => {
+      try {
+         const res = await api.get(`/subordinates/${userId}/materiel/all`)
+         setViewingEquipment(Array.isArray(res.data) ? res.data : [])
+      } catch { }
+   }
+
    // ── ACCUSER ────────────────────────────────────────────────────
    const handleAccuser = async () => {
       if (!confirmingItem || !sidebarUser) return
@@ -340,6 +356,30 @@ export default function UserSubordinatesPageRH() {
          } catch { } finally { setLoadingEquipment(false) }
       }
    }
+
+   useEffect(() => {
+      const refreshVisibleSubordinates = () => {
+         if (document.visibilityState !== "visible") return
+
+         void fetchSubordinates()
+         if (sidebarOpen && sidebarUser?.id) {
+            void refreshSidebar(sidebarUser.id)
+         }
+         if (viewingUser?.id && viewingTab === "equipment") {
+            void refreshViewingEquipment(viewingUser.id)
+         }
+      }
+
+      const interval = window.setInterval(refreshVisibleSubordinates, 4000)
+      window.addEventListener("focus", refreshVisibleSubordinates)
+      document.addEventListener("visibilitychange", refreshVisibleSubordinates)
+
+      return () => {
+         window.clearInterval(interval)
+         window.removeEventListener("focus", refreshVisibleSubordinates)
+         document.removeEventListener("visibilitychange", refreshVisibleSubordinates)
+      }
+   }, [sidebarOpen, sidebarUser?.id, viewingTab, viewingUser?.id, currentUser?.id, currentUser?.userId])
 
    // ── DETACH ───────────────────────────────────────────────────
    const handleDetach = async () => {
@@ -473,7 +513,8 @@ export default function UserSubordinatesPageRH() {
 
             {/* Main Table */}
             <div className={styles.card}>
-               <table className="w-full min-w-[700px]">
+               <div className="overflow-x-auto">
+               <table className="w-full min-w-[860px]">
                   <thead>
                      <tr>
                         <SortableTh label="Collaborateur" sortKey="nom" />
@@ -544,6 +585,7 @@ export default function UserSubordinatesPageRH() {
                      })}
                   </tbody>
                </table>
+               </div>
                {totalPages > 1 && <Pagination current={page} total={totalPages} setPage={setPage} />}
             </div>
          </div>
@@ -807,4 +849,3 @@ export default function UserSubordinatesPageRH() {
       </div>
    )
 }
-

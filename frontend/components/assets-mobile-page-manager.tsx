@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import { exportStyledWorkbook } from "@/lib/excel-export"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
@@ -88,9 +89,13 @@ export default function ManagerAssetsMobilePage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchDevices(), 4000, [])
+
   const fetchDevices = async () => {
     try {
-      setLoading(true)
+      if (devices.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/mobiles")
       setDevices(Array.isArray(res.data) ? res.data : [])
     } catch (e) { console.error(e); setDevices([]) }
@@ -661,4 +666,3 @@ export default function ManagerAssetsMobilePage() {
     </div>
   )
 }
-

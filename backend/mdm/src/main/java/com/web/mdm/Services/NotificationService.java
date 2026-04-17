@@ -88,7 +88,7 @@ public class NotificationService {
     public Notification notifyManagementToAdmin(String actionLabel, Users affectedUser) {
         Integer actorUserId = getCurrentActorUserId();
         List<Integer> adminUserIds = findAdministrateurUserIds();
-        if (actorUserId == null || adminUserIds.isEmpty() || affectedUser == null) {
+        if (actorUserId == null || affectedUser == null) {
             return null;
         }
 
@@ -97,7 +97,11 @@ public class NotificationService {
         String eventKey = UUID.randomUUID().toString();
         for (Integer adminUserId : adminUserIds) {
             latest = createNotification(buildManagementMessage(actionLabel, affectedUser), actorUserId, adminUserId,
-                    managerId, affectedUser.getId(), eventKey);
+                    managerId, null, eventKey);
+        }
+        if (!affectedUser.getId().equals(actorUserId)) {
+            latest = createNotification(buildManagementMessage(actionLabel, affectedUser), actorUserId,
+                    affectedUser.getId(), resolveManagerIdForRecipient(affectedUser.getId()), null, eventKey);
         }
         return latest;
     }

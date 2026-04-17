@@ -2,6 +2,7 @@ package com.web.mdm.Controllers;
 
 import com.web.mdm.Dto.HelpdeskBootstrapDto;
 import com.web.mdm.Dto.HelpdeskTicketDetailDto;
+import com.web.mdm.Dto.HelpdeskTicketHistoryDto;
 import com.web.mdm.Dto.HelpdeskTicketSummaryDto;
 import com.web.mdm.Dto.TicketAdminUpdateRequest;
 import com.web.mdm.Dto.TicketCreateRequest;
@@ -50,6 +51,11 @@ public class HelpdeskController {
     @GetMapping("/tickets/{ticketId}")
     public HelpdeskTicketDetailDto getTicket(@PathVariable Integer ticketId) {
         return helpdeskService.getTicketDetail(ticketId);
+    }
+
+    @GetMapping("/tickets/{ticketId}/history")
+    public List<HelpdeskTicketHistoryDto> getTicketHistory(@PathVariable Integer ticketId) {
+        return helpdeskService.getTicketHistory(ticketId);
     }
 
     @PostMapping("/tickets/{ticketId}/claim")

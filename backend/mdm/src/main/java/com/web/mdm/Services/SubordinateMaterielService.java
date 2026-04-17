@@ -36,6 +36,8 @@ public class SubordinateMaterielService {
     private MaterielSyncService syncService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     @Transactional
     public Materiel confirmReception(Integer materielId) {
@@ -109,8 +111,7 @@ public class SubordinateMaterielService {
 
         mat.setStatusAffectation("annuler");
         mat.setDateAnnuler(now);
-        // Keep behavior from original controller: clear assigned user in unified table
-        mat.setAffectedUser(null);
+        // Keep the current assignee linked while the item is only reported/annule.
         materielRepository.save(mat);
 
         syncService.syncHistory(type, specificId, mat.getSn(), mat.getNumero(), mat.getOperateur(),
@@ -150,7 +151,7 @@ public class SubordinateMaterielService {
         hm.setStatusEvent("RECEPTION");
         hm.setDateEvent(now);
         hm.setDateRecu(now);
-        histMobileRepo.save(hm);
+        histMobileRepo.save(historyAdminStampService.stamp(hm));
     }
 
     private void handleMobileAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
@@ -181,7 +182,7 @@ public class SubordinateMaterielService {
         hm.setDateAnnuler(now);
         hm.setMotif(motif);
         hm.setCommentaire(commentaire);
-        histMobileRepo.save(hm);
+        histMobileRepo.save(historyAdminStampService.stamp(hm));
     }
 
     private void handleSimReception(Materiel mat, Integer specificId, LocalDate now) {
@@ -211,7 +212,7 @@ public class SubordinateMaterielService {
         hs.setStatusEvent("RECEPTION");
         hs.setDateEvent(now);
         hs.setDateRecu(now);
-        histSimRepo.save(hs);
+        histSimRepo.save(historyAdminStampService.stamp(hs));
     }
 
     private void handleSimAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
@@ -244,7 +245,7 @@ public class SubordinateMaterielService {
         hs.setDateAnnuler(now);
         hs.setMotif(motif);
         hs.setCommentaire(commentaire);
-        histSimRepo.save(hs);
+        histSimRepo.save(historyAdminStampService.stamp(hs));
     }
 
     private void handleInternetReception(Materiel mat, Integer specificId, LocalDate now) {
@@ -273,7 +274,7 @@ public class SubordinateMaterielService {
         hl.setStatusEvent("RECEPTION");
         hl.setDateEvent(now);
         hl.setDateRecu(now);
-        histInternetRepo.save(hl);
+        histInternetRepo.save(historyAdminStampService.stamp(hl));
     }
 
     private void handleInternetAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
@@ -305,7 +306,7 @@ public class SubordinateMaterielService {
         hl.setDateAnnuler(now);
         hl.setMotif(motif);
         hl.setCommentaire(commentaire);
-        histInternetRepo.save(hl);
+        histInternetRepo.save(historyAdminStampService.stamp(hl));
     }
 
     private void handleMaterielsReception(Materiel mat, Integer specificId, LocalDate now) {
@@ -331,7 +332,7 @@ public class SubordinateMaterielService {
         applyUserSnapshot(h, user, agence, entrepot, dept);
         applyContextSnapshot(h, agence, entrepot, dept);
 
-        histMaterielsRepo.save(h);
+        histMaterielsRepo.save(historyAdminStampService.stamp(h));
     }
 
     private void handleMaterielsAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
@@ -360,7 +361,7 @@ public class SubordinateMaterielService {
         applyUserSnapshot(h, user, agence, entrepot, dept);
         applyContextSnapshot(h, agence, entrepot, dept);
 
-        histMaterielsRepo.save(h);
+        histMaterielsRepo.save(historyAdminStampService.stamp(h));
     }
 
     private void applyUserSnapshot(HistoriqueMobile h, Users user) {

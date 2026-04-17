@@ -4,6 +4,7 @@ import com.web.mdm.Dto.HelpdeskBootstrapDto;
 import com.web.mdm.Dto.HelpdeskDeviceOptionDto;
 import com.web.mdm.Dto.HelpdeskFileDto;
 import com.web.mdm.Dto.HelpdeskMessageDto;
+import com.web.mdm.Dto.HelpdeskTicketHistoryDto;
 import com.web.mdm.Dto.HelpdeskTicketDetailDto;
 import com.web.mdm.Dto.HelpdeskTicketSummaryDto;
 import com.web.mdm.Dto.HelpdeskUserOptionDto;
@@ -11,6 +12,7 @@ import com.web.mdm.Dto.TicketAdminUpdateRequest;
 import com.web.mdm.Dto.TicketCreateRequest;
 import com.web.mdm.Dto.TicketReplyRequest;
 import com.web.mdm.Models.Compte;
+import com.web.mdm.Models.HistoriqueTicket;
 import com.web.mdm.Models.Materiel;
 import com.web.mdm.Models.Ticket;
 import com.web.mdm.Models.TicketDevice;
@@ -20,6 +22,7 @@ import com.web.mdm.Models.TicketObservant;
 import com.web.mdm.Models.TicketTarget;
 import com.web.mdm.Models.Users;
 import com.web.mdm.Repository.CompteRepository;
+import com.web.mdm.Repository.HistoriqueTicketRepository;
 import com.web.mdm.Repository.MaterielRepository;
 import com.web.mdm.Repository.TicketDeviceRepository;
 import com.web.mdm.Repository.TicketFileRepository;
@@ -71,6 +74,8 @@ public class HelpdeskService {
     private final TicketObservantRepository ticketObservantRepository;
     private final TicketTargetRepository ticketTargetRepository;
     private final TicketDeviceRepository ticketDeviceRepository;
+    private final HistoriqueTicketRepository historiqueTicketRepository;
+    private final HistoryAdminStampService historyAdminStampService;
     private final MaterielRepository materielRepository;
     private final UsersRepository usersRepository;
     private final CompteRepository compteRepository;
@@ -84,6 +89,8 @@ public class HelpdeskService {
             TicketObservantRepository ticketObservantRepository,
             TicketTargetRepository ticketTargetRepository,
             TicketDeviceRepository ticketDeviceRepository,
+            HistoriqueTicketRepository historiqueTicketRepository,
+            HistoryAdminStampService historyAdminStampService,
             MaterielRepository materielRepository,
             UsersRepository usersRepository,
             CompteRepository compteRepository,
@@ -94,6 +101,8 @@ public class HelpdeskService {
         this.ticketObservantRepository = ticketObservantRepository;
         this.ticketTargetRepository = ticketTargetRepository;
         this.ticketDeviceRepository = ticketDeviceRepository;
+        this.historiqueTicketRepository = historiqueTicketRepository;
+        this.historyAdminStampService = historyAdminStampService;
         this.materielRepository = materielRepository;
         this.usersRepository = usersRepository;
         this.compteRepository = compteRepository;
@@ -166,6 +175,23 @@ public class HelpdeskService {
         return toDetail(ticket, currentUser.getId(), admin, snapshot);
     }
 
+    public List<HelpdeskTicketHistoryDto> getTicketHistory(Integer ticketId) {
+        Compte compte = getCurrentCompte();
+        Users currentUser = requireCurrentUser(compte);
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket introuvable"));
+
+        Snapshot snapshot = buildSnapshot();
+        boolean admin = isAdmin(compte);
+        if (!canViewTicket(ticket, currentUser.getId(), admin, snapshot)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse");
+        }
+
+        return historiqueTicketRepository.findByTicket_IdOrderByDateEventDescIdDesc(ticketId).stream()
+                .map(this::toTicketHistoryDto)
+                .toList();
+    }
+
     @Transactional
     public HelpdeskTicketDetailDto claimTicket(Integer ticketId) {
         Compte compte = getCurrentCompte();
@@ -200,6 +226,9 @@ public class HelpdeskService {
             throw alreadyClaimed(refreshed);
         }
 
+        Ticket claimedTicket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket introuvable"));
+        recordTicketHistory(claimedTicket, currentUser, "CLAIM");
         return getTicketDetail(ticketId);
     }
 
@@ -238,6 +267,7 @@ public class HelpdeskService {
         saveMessage(ticket, currentUser, null, body, TicketMessage.MessageDeliveryStatus.sent);
         storeFiles(ticket, files);
         notifyTicketCreation(ticket, compte, currentUser, adminIds, selectedMateriels);
+        recordTicketHistory(ticket, currentUser, ticket.getStatus().name());
         return getTicketDetail(ticket.getId());
     }
 
@@ -318,6 +348,7 @@ public class HelpdeskService {
         if (requestedStatus == Ticket.TicketStatus.resolu) {
             notifyAdminResolution(ticket, currentUser);
         }
+        recordTicketHistory(ticket, currentUser, requestedStatus != null ? requestedStatus.name() : ticket.getStatus().name());
         return getTicketDetail(ticketId);
     }
 
@@ -361,8 +392,29 @@ public class HelpdeskService {
             if (latest.getLatestDate() != null && latest.getLatestDate().plusDays(delay).isBefore(now)) {
                 ticket.setStatus(Ticket.TicketStatus.clos);
                 ticketRepository.save(ticket);
+                recordTicketHistory(ticket, null, Ticket.TicketStatus.clos.name());
             }
         }
+    }
+
+    private void recordTicketHistory(Ticket ticket, Users actor, String statusEvent) {
+        if (ticket == null || ticket.getId() == null || statusEvent == null || statusEvent.isBlank()) {
+            return;
+        }
+
+        HistoriqueTicket history = new HistoriqueTicket();
+        history.setTicket(ticket);
+        history.setSujet(ticket.getSubject());
+        history.setCategorie(categoryLabel(ticket.getSousCategoryId()));
+        history.setFlag(ticket.getFlag() != null ? ticket.getFlag().name() : null);
+        history.setType(ticket.getType() != null ? ticket.getType().name() : null);
+        history.setUser(actor);
+        history.setManagerId(actor != null ? actor.getManagerId() : null);
+        history.setDateEnvoie(ticket.getDateSent());
+        history.setStatusEvent(statusEvent);
+        history.setDateEvent(LocalDateTime.now());
+        history.setApplier(resolveApplierUser(ticket));
+        historiqueTicketRepository.save(historyAdminStampService.stamp(history));
     }
 
     private List<Materiel> resolveAllowedMateriels(Compte compte, Users currentUser, List<Integer> requestedIds) {
@@ -743,6 +795,25 @@ public class HelpdeskService {
         return dto;
     }
 
+    private HelpdeskTicketHistoryDto toTicketHistoryDto(HistoriqueTicket history) {
+        HelpdeskTicketHistoryDto dto = new HelpdeskTicketHistoryDto();
+        dto.setId(history.getId());
+        dto.setTicketId(history.getTicket() != null ? history.getTicket().getId() : null);
+        dto.setSujet(history.getSujet());
+        dto.setCategorie(history.getCategorie());
+        dto.setFlag(history.getFlag());
+        dto.setType(history.getType());
+        dto.setUserId(history.getUser() != null ? history.getUser().getId() : null);
+        dto.setUserName(history.getUser() != null ? fullName(history.getUser()) : null);
+        dto.setManagerId(history.getManagerId());
+        dto.setDateEnvoie(history.getDateEnvoie() != null ? history.getDateEnvoie().toString() : null);
+        dto.setStatusEvent(history.getStatusEvent());
+        dto.setDateEvent(history.getDateEvent() != null ? history.getDateEvent().toString() : null);
+        dto.setApplierId(history.getApplier() != null ? history.getApplier().getId() : null);
+        dto.setApplierName(history.getApplier() != null ? fullName(history.getApplier()) : null);
+        return dto;
+    }
+
     private HelpdeskDeviceOptionDto toDeviceOption(TicketDevice device) {
         return toDeviceOption(device.getMateriel());
     }
@@ -882,6 +953,7 @@ public class HelpdeskService {
         return latest != null
                 && latest.getSender() != null
                 && !Objects.equals(latest.getSender().getId(), currentUserId)
+                && "Administrateur".equalsIgnoreCase(resolveRoleForUser(latest.getSender().getId()))
                 && latest.getStatusSent() == TicketMessage.MessageDeliveryStatus.pending
                 && Objects.equals(latest.getReplied(), 0);
     }

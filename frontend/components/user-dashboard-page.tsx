@@ -45,24 +45,42 @@ export default function UserDashboardPage() {
   const [currentUser, setCurrentUser] = useState<UserEntity | null>(null)
   const [assets, setAssets] = useState<MyAsset[]>([])
 
+  const fetchDashboardData = async () => {
+    const authUserId = Number(user?.userId ?? user?.id)
+    if (!authUserId) return
+
+    const [usersRes, assetsRes] = await Promise.all([
+      api.get("/users").catch(() => ({ data: [] })),
+      api.get("/user-materiel/my-assets").catch(() => ({ data: [] })),
+    ])
+
+    const users = Array.isArray(usersRes.data) ? usersRes.data : []
+    const myAssets = Array.isArray(assetsRes.data) ? assetsRes.data : []
+
+    setCurrentUser(users.find((item: UserEntity) => item.id === authUserId) || null)
+    setAssets(myAssets)
+  }
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      const authUserId = Number(user?.userId ?? user?.id)
-      if (!authUserId) return
+    void fetchDashboardData()
+  }, [user?.id, user?.userId])
 
-      const [usersRes, assetsRes] = await Promise.all([
-        api.get("/users").catch(() => ({ data: [] })),
-        api.get("/user-materiel/my-assets").catch(() => ({ data: [] })),
-      ])
-
-      const users = Array.isArray(usersRes.data) ? usersRes.data : []
-      const myAssets = Array.isArray(assetsRes.data) ? assetsRes.data : []
-
-      setCurrentUser(users.find((item: UserEntity) => item.id === authUserId) || null)
-      setAssets(myAssets)
+  useEffect(() => {
+    const refreshVisibleDashboard = () => {
+      if (document.visibilityState === "visible") {
+        void fetchDashboardData()
+      }
     }
 
-    fetchDashboardData()
+    const interval = window.setInterval(refreshVisibleDashboard, 4000)
+    window.addEventListener("focus", refreshVisibleDashboard)
+    document.addEventListener("visibilitychange", refreshVisibleDashboard)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener("focus", refreshVisibleDashboard)
+      document.removeEventListener("visibilitychange", refreshVisibleDashboard)
+    }
   }, [user?.id, user?.userId])
 
   const visibleAssets = useMemo(

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-public class HistoriqueMateriel {
+public class HistoriqueMateriel implements AdminTrackedHistory, ManagerTrackedHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -21,6 +21,10 @@ public class HistoriqueMateriel {
     @ManyToOne
     @JoinColumn(name = "affected_user_id")
     private Users affectedUser;
+    @Column(name = "admin_id")
+    private Integer adminId;
+    @Column(name = "manager_id")
+    private Integer managerId;
     private String userCin;
     private String userMatricule;
     private String userNom;
@@ -115,6 +119,27 @@ public class HistoriqueMateriel {
 
     public void setAffectedUser(Users affectedUser) {
         this.affectedUser = affectedUser;
+    }
+
+    public Integer getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Integer adminId) {
+        this.adminId = adminId;
+    }
+
+    public Integer getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(Integer managerId) {
+        this.managerId = managerId;
+    }
+
+    @Override
+    public Integer resolveTargetUserId() {
+        return affectedUser != null ? affectedUser.getId() : null;
     }
 
     public String getUserCin() {

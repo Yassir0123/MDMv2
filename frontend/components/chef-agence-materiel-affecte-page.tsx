@@ -47,6 +47,24 @@ export default function ChefAgenceMaterielAffectePage() {
       fetchMyAssets()
    }, [])
 
+   useEffect(() => {
+      const refreshVisibleAssets = () => {
+         if (document.visibilityState === "visible") {
+            void fetchMyAssets()
+         }
+      }
+
+      const interval = window.setInterval(refreshVisibleAssets, 4000)
+      window.addEventListener("focus", refreshVisibleAssets)
+      document.addEventListener("visibilitychange", refreshVisibleAssets)
+
+      return () => {
+         window.clearInterval(interval)
+         window.removeEventListener("focus", refreshVisibleAssets)
+         document.removeEventListener("visibilitychange", refreshVisibleAssets)
+      }
+   }, [])
+
    const fetchMyAssets = async () => {
       try {
          setLoading(true)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import api from "@/lib/api"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, RotateCw, Eye, Trash2,
    AlertTriangle, Archive, ArrowUpDown, X, FileWarning,
@@ -46,9 +47,13 @@ export default function MaterielAnnulePage() {
       fetchCancelled()
    }, [])
 
+   useVisiblePolling(() => fetchCancelled(), 4000, [])
+
    const fetchCancelled = async () => {
       try {
-         setLoading(true)
+         if (materials.length === 0) {
+            setLoading(true)
+         }
          const res = await api.get("/user-materiel/cancelled")
          if (Array.isArray(res.data)) {
             const mapped = res.data.map((m: any) => ({
@@ -68,7 +73,9 @@ export default function MaterielAnnulePage() {
             setMaterials(mapped)
          }
       } catch (e) { console.error(e) }
-      finally { setLoading(false) }
+      finally {
+         setLoading(false)
+      }
    }
 
    // --- Logic ---
@@ -261,7 +268,8 @@ export default function MaterielAnnulePage() {
 
             {/* Table */}
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-               <table className="w-full">
+               <div className="overflow-x-auto">
+               <table className="w-full min-w-[860px]">
                   <thead>
                      <tr>
                         {[{ id: 'name', label: 'Nom' }, { id: 'type', label: 'Type' }, { id: 'details', label: 'Détails' }, { id: 'assignedTo', label: 'Utilisateur Rejeté' }].map((col) => (
@@ -311,6 +319,7 @@ export default function MaterielAnnulePage() {
                      )}
                   </tbody>
                </table>
+               </div>
             </div>
 
             {/* DETAIL MODAL */}

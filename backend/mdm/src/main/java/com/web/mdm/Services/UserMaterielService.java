@@ -37,6 +37,8 @@ public class UserMaterielService {
     private HistoriqueMaterielsRepository histMaterielsRepo;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     // --- 1. CONFIRM RECEPTION (ACCUSER) ---
     public void confirmReception(Integer materielId) {
@@ -70,7 +72,7 @@ public class UserMaterielService {
                 hm.setStatusEvent("RECEPTION"); // <--- Specific Event
                 hm.setDateEvent(now);
                 hm.setDateRecu(now);
-                histMobileRepo.save(hm);
+                histMobileRepo.save(historyAdminStampService.stamp(hm));
                 break;
 
             case "CarteSim":
@@ -93,7 +95,7 @@ public class UserMaterielService {
                 hs.setStatusEvent("RECEPTION");
                 hs.setDateEvent(now);
                 hs.setDateRecu(now);
-                histSimRepo.save(hs);
+                histSimRepo.save(historyAdminStampService.stamp(hs));
                 break;
 
             case "LigneInternet":
@@ -113,7 +115,7 @@ public class UserMaterielService {
                 hl.setStatusEvent("RECEPTION");
                 hl.setDateEvent(now);
                 hl.setDateRecu(now);
-                histInternetRepo.save(hl);
+                histInternetRepo.save(historyAdminStampService.stamp(hl));
                 break;
 
             default: // Materiels (IT)
@@ -133,7 +135,7 @@ public class UserMaterielService {
                 hit.setStatusEvent("RECEPTION");
                 hit.setDateEvent(now);
                 hit.setDateRecu(now);
-                histMaterielsRepo.save(hit);
+                histMaterielsRepo.save(historyAdminStampService.stamp(hit));
                 break;
         }
 
@@ -187,7 +189,7 @@ public class UserMaterielService {
                 hm.setDateAnnuler(now);
                 hm.setMotif(motif);
                 hm.setCommentaire(commentaire);
-                histMobileRepo.save(hm);
+                histMobileRepo.save(historyAdminStampService.stamp(hm));
                 break;
 
             case "CarteSim":
@@ -211,7 +213,7 @@ public class UserMaterielService {
                 hs.setDateAnnuler(now);
                 hs.setMotif(motif);
                 hs.setCommentaire(commentaire);
-                histSimRepo.save(hs);
+                histSimRepo.save(historyAdminStampService.stamp(hs));
                 break;
 
             case "LigneInternet":
@@ -233,7 +235,7 @@ public class UserMaterielService {
                 hl.setDateAnnuler(now);
                 hl.setMotif(motif);
                 hl.setCommentaire(commentaire);
-                histInternetRepo.save(hl);
+                histInternetRepo.save(historyAdminStampService.stamp(hl));
                 break;
 
             default: // Materiels
@@ -254,7 +256,7 @@ public class UserMaterielService {
                 hit.setDateAnnuler(now);
                 hit.setMotif(motif);
                 hit.setCommentaire(commentaire);
-                histMaterielsRepo.save(hit);
+                histMaterielsRepo.save(historyAdminStampService.stamp(hit));
                 break;
         }
 
@@ -383,7 +385,7 @@ public class UserMaterielService {
             h.setSN(m.getSn());
             h.setStatusEvent(event);
             h.setDateEvent(date);
-            histMobileRepo.save(h);
+            histMobileRepo.save(historyAdminStampService.stamp(h));
         } else if (entity instanceof CarteSim) {
             CarteSim s = (CarteSim) entity;
             HistoriqueCartesim h = new HistoriqueCartesim();
@@ -391,7 +393,7 @@ public class UserMaterielService {
             h.setSn(s.getSn());
             h.setStatusEvent(event);
             h.setDateEvent(date);
-            histSimRepo.save(h);
+            histSimRepo.save(historyAdminStampService.stamp(h));
         } else if (entity instanceof LigneInternet) {
             LigneInternet l = (LigneInternet) entity;
             HistoriqueLigneinternet h = new HistoriqueLigneinternet();
@@ -399,14 +401,14 @@ public class UserMaterielService {
             h.setSN(l.getSn());
             h.setStatusEvent(event);
             h.setDateEvent(date);
-            histInternetRepo.save(h);
+            histInternetRepo.save(historyAdminStampService.stamp(h));
         } else if (entity instanceof Materiels) {
             Materiels m = (Materiels) entity;
             HistoriqueMateriels h = new HistoriqueMateriels();
             h.setMateriels(m);
             h.setStatusEvent(event);
             h.setDateEvent(date);
-            histMaterielsRepo.save(h);
+            histMaterielsRepo.save(historyAdminStampService.stamp(h));
         }
     }
 }

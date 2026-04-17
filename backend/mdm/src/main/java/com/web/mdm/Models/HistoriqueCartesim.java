@@ -6,7 +6,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 @Entity
-public class HistoriqueCartesim {
+public class HistoriqueCartesim implements AdminTrackedHistory, ManagerTrackedHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -29,6 +29,12 @@ public class HistoriqueCartesim {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
+
+    @Column(name = "admin_id")
+    private Integer adminId;
+
+    @Column(name = "manager_id")
+    private Integer managerId;
 
     // User Snapshot
     private String userNom;
@@ -153,6 +159,27 @@ public class HistoriqueCartesim {
 
     public void setUser(Users user) {
         this.user = user;
+    }
+
+    public Integer getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Integer adminId) {
+        this.adminId = adminId;
+    }
+
+    public Integer getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(Integer managerId) {
+        this.managerId = managerId;
+    }
+
+    @Override
+    public Integer resolveTargetUserId() {
+        return user != null ? user.getId() : null;
     }
 
     public String getUserNom() {

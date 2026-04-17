@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Bar,
   BarChart,
@@ -181,6 +182,37 @@ export default function GLPIDashboard({ onViewAllNotifications }: { onViewAllNot
   const [internetLines, setInternetLines] = useState<LigneInternet[]>([])
   const [materiels, setMateriels] = useState<Materiel[]>([])
 
+  const fetchDashboardData = async () => {
+    let hasWarmCache = false
+
+    try {
+      const cachedRaw = sessionStorage.getItem(DASHBOARD_CACHE_KEY)
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw) as { timestamp?: number; data?: DashboardSummaryPayload }
+        if (cached?.timestamp && cached?.data && Date.now() - cached.timestamp < DASHBOARD_CACHE_TTL_MS) {
+          applySummary(cached.data)
+          hasWarmCache = true
+          setLoading(false)
+        }
+      }
+
+      if (!hasWarmCache) {
+        setLoading(true)
+      }
+      const summaryRes = await api.get("/dashboard/summary")
+      const summary = summaryRes.data || {}
+      applySummary(summary)
+      sessionStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        data: summary,
+      }))
+    } finally {
+      if (!hasWarmCache) {
+        setLoading(false)
+      }
+    }
+  }
+
   const applySummary = (summary: DashboardSummaryPayload) => {
     setUsers(Array.isArray(summary.users) ? summary.users : [])
     setMobiles(Array.isArray(summary.mobiles) ? summary.mobiles : [])
@@ -190,39 +222,10 @@ export default function GLPIDashboard({ onViewAllNotifications }: { onViewAllNot
   }
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      let hasWarmCache = false
-
-      try {
-        const cachedRaw = sessionStorage.getItem(DASHBOARD_CACHE_KEY)
-        if (cachedRaw) {
-          const cached = JSON.parse(cachedRaw) as { timestamp?: number; data?: DashboardSummaryPayload }
-          if (cached?.timestamp && cached?.data && Date.now() - cached.timestamp < DASHBOARD_CACHE_TTL_MS) {
-            applySummary(cached.data)
-            hasWarmCache = true
-            setLoading(false)
-          }
-        }
-
-        if (!hasWarmCache) {
-          setLoading(true)
-        }
-        const summaryRes = await api.get("/dashboard/summary")
-        const summary = summaryRes.data || {}
-        applySummary(summary)
-        sessionStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({
-          timestamp: Date.now(),
-          data: summary,
-        }))
-      } finally {
-        if (!hasWarmCache) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchDashboardData()
+    void fetchDashboardData()
   }, [])
+
+  useVisiblePolling(() => fetchDashboardData(), 5000, [user?.id, user?.userId, user?.role])
 
   const currentUserRecord = useMemo(() => {
     const authUserId = Number(user?.userId ?? user?.id)

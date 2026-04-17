@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
    Link2, Unlink2, RefreshCw, Smartphone, Tablet,
@@ -218,9 +219,19 @@ export default function AssetsMobilePage() {
       fetchDropdownData()
    }, [])
 
+   useVisiblePolling(() => fetchDevices(), 4000, [])
+
+   useVisiblePolling(() => {
+      if (viewMode === "view" && selectedDevice?.id) {
+         void fetchDeviceHistory(selectedDevice.id)
+      }
+   }, 4000, [viewMode, selectedDevice?.id])
+
    const fetchDevices = async () => {
       try {
-         setLoading(true)
+         if (devices.length === 0) {
+            setLoading(true)
+         }
          const res = await api.get("/mobiles")
          setDevices(Array.isArray(res.data) ? res.data : [])
       } catch (e) { console.error(e); setDevices([]) }
@@ -240,6 +251,26 @@ export default function AssetsMobilePage() {
          setDepartements(Array.isArray(resDepts.data) ? resDepts.data : [])
          setUsersList(Array.isArray(resUsers.data) ? resUsers.data : [])
       } catch (e) { console.error(e) }
+   }
+
+   const fetchDeviceHistory = async (deviceId: number) => {
+      try {
+         const res = await api.get("/historique-mobile")
+         const devHistory = Array.isArray(res.data) ? res.data
+            .filter((h: any) => h.materiel?.id === deviceId)
+            .map((h: any) => ({
+               id: h.id,
+               action: h.statusEvent,
+               utilisateur: (h.userNom === "STOCK") ? "STOCK" :
+                  (h.userNom && h.userPrenom) ? `${h.userNom} ${h.userPrenom}` : (h.userNom ? h.userNom : "SystÃ¨me / Stock"),
+               entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || "-",
+               agenceNom: h.agenceNom || (h.agence?.nom) || "-",
+               departementNom: h.departmentNom || (h.departement?.nom) || "-",
+               chefAgence: h.chefAgenceNom || "-",
+               date: h.dateEvent
+            })) : []
+         setHistory(devHistory)
+      } catch (e) { setHistory([]) }
    }
 
    // --- LOGIC ---
@@ -453,23 +484,8 @@ export default function AssetsMobilePage() {
    const handleView = async (dev: Mobile) => {
       setSelectedDevice(dev)
       setViewMode("view")
-      try {
-         const res = await api.get("/historique-mobile")
-         const devHistory = Array.isArray(res.data) ? res.data
-            .filter((h: any) => h.materiel?.id === dev.id)
-            .map((h: any) => ({
-               id: h.id,
-               action: h.statusEvent,
-               utilisateur: (h.userNom === "STOCK") ? "STOCK" :
-                  (h.userNom && h.userPrenom) ? `${h.userNom} ${h.userPrenom}` : (h.userNom ? h.userNom : "SystÃ¨me / Stock"),
-               entrepotNom: h.entrepotNom || (h.entrepot?.siteRef?.libeller) || "-",
-               agenceNom: h.agenceNom || (h.agence?.nom) || "-",
-               departementNom: h.departmentNom || (h.departement?.nom) || "-",
-               chefAgence: h.chefAgenceNom || "-",
-               date: h.dateEvent
-            })) : []
-         setHistory(devHistory)
-      } catch (e) { setHistory([]) }
+      setHistoryPage(1)
+      await fetchDeviceHistory(dev.id)
    }
 
    const handleSave = async () => {
@@ -514,7 +530,7 @@ export default function AssetsMobilePage() {
       if (!selectedDevice) return
 
       if (affectTab === "agence" && (!selectedAgenceId || !targetUserId)) { alert("Veuillez sélectionner une agence et un utilisateur."); return }
-      if (affectTab === "entrepot" && (!selectedEntrepotId || !targetUserId)) { alert("Veuillez sélectionner un entrepÃ´t et un utilisateur."); return }
+      if (affectTab === "entrepot" && (!selectedEntrepotId || !targetUserId)) { alert("Veuillez sélectionner un entrepôt et un utilisateur."); return }
       if (affectTab === "departement" && !selectedDeptId) { alert("Veuillez sélectionner un département."); return }
 
       try {
@@ -877,12 +893,12 @@ export default function AssetsMobilePage() {
                   setFilters={setFilters}
                   attributes={[
                      { value: "nom", label: "Nom" },
-                     { value: "model", label: "ModÃ¨le" },
+                     { value: "model", label: "Modéle" },
                      { value: "type", label: "Type" },
                      { value: "imei", label: "IMEI" },
                      { value: "sn", label: "Série (SN)" },
                      { value: "userNom", label: "Affectation" },
-                     { value: "entrepotNom", label: "EntrepÃ´t" },
+                     { value: "entrepotNom", label: "Entrepôt" },
                      { value: "agenceNom", label: "Agence" },
                      { value: "departementNom", label: "Département" }
                   ]}
@@ -901,7 +917,7 @@ export default function AssetsMobilePage() {
                <div className={`${styles.card} card-hover`}>
                   <div className="overflow-x-auto">
                      <table className="w-full text-left min-w-[1000px]">
-                        <thead><tr><SortableTh label="Nom" sortKey="nom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="ModÃ¨le" sortKey="model" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Type" sortKey="type" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="EntrepÃ´t" sortKey="entrepotNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Agence" sortKey="agenceNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Département" sortKey="departementNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Affectation" sortKey="userNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><th className={styles.th}>Statut</th><th className={`${styles.th} text-right`}>Actions</th></tr></thead>
+                        <thead><tr><SortableTh label="Nom" sortKey="nom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Modéle" sortKey="model" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Type" sortKey="type" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Entrepôt" sortKey="entrepotNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Agence" sortKey="agenceNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Département" sortKey="departementNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><SortableTh label="Affectation" sortKey="userNom" sortByVal={sortBy} sortOrderVal={sortOrder} onClick={handleSortClick} /><th className={styles.th}>Statut</th><th className={`${styles.th} text-right`}>Actions</th></tr></thead>
                         <tbody className="divide-y divide-border/50">
                            {paginatedDevices.map(dev => (
                               <tr key={dev.id} className="hover:bg-secondary/50 transition-colors group">
@@ -939,12 +955,12 @@ export default function AssetsMobilePage() {
                                  </td>
                               </tr>
                            ))}
-                         </tbody>
-                      </table>
-                   </div>
-                   {totalPages > 1 && <Pagination current={page} total={totalPages} setPage={setPage} />}
-                </div>
-             </div>
+                        </tbody>
+                     </table>
+                  </div>
+                  {totalPages > 1 && <Pagination current={page} total={totalPages} setPage={setPage} />}
+               </div>
+            </div>
          </div>
 
          {/* AFFECTATION MODAL (TSP LOGIC WITH CURRENT OWNER) */}
@@ -974,7 +990,7 @@ export default function AssetsMobilePage() {
                                     <input type="text" value={selectedDevice.agenceNom || "-"} disabled className="w-full text-xs py-1 px-2 bg-slate-100 border border-slate-200 rounded text-slate-700" />
                                  </div>
                                  <div>
-                                    <label className="text-[10px] font-semibold text-slate-500 block mb-0.5">EntrepÃ´t</label>
+                                    <label className="text-[10px] font-semibold text-slate-500 block mb-0.5">Entrepôt</label>
                                     <input type="text" value={selectedDevice.entrepotNom || "-"} disabled className="w-full text-xs py-1 px-2 bg-slate-100 border border-slate-200 rounded text-slate-700" />
                                  </div>
                               </div>
@@ -1009,7 +1025,7 @@ export default function AssetsMobilePage() {
                               onClick={() => { setAffectTab("entrepot"); setSelectedAgenceId(""); setSelectedDeptId(""); setTargetUserId(""); }}
                               className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${affectTab === "entrepot" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"}`}
                            >
-                              Par entrepÃ´t
+                              Par entrepôt
                            </button>
                            <button
                               onClick={() => { setAffectTab("departement"); setSelectedAgenceId(""); setSelectedEntrepotId(""); setTargetUserId(""); }}
@@ -1022,7 +1038,7 @@ export default function AssetsMobilePage() {
                         <div className="space-y-3">
                            <div>
                               <label className="text-[10px] font-semibold text-slate-700 block mb-1">
-                                 {affectTab === "agence" ? "1. Agence" : affectTab === "entrepot" ? "1. EntrepÃ´t" : "1. Département"}
+                                 {affectTab === "agence" ? "1. Agence" : affectTab === "entrepot" ? "1. Entrepôt" : "1. Département"}
                               </label>
 
                               {affectTab === "agence" && (
@@ -1046,8 +1062,8 @@ export default function AssetsMobilePage() {
                                        options={entrepots}
                                        value={selectedEntrepotId}
                                        onChange={(val) => { setSelectedEntrepotId(String(val)); setTargetUserId(""); }}
-                                       getLabel={(e) => e.siteRef?.libeller || `EntrepÃ´t #${e.id}`}
-                                       placeholder="Choisir l'entrepÃ´t..."
+                                       getLabel={(e) => e.siteRef?.libeller || `Entrepôt #${e.id}`}
+                                       placeholder="Choisir l'entrepôt..."
                                        inputStyle={{ paddingLeft: "2rem", fontSize: "0.75rem", height: "2rem" }}
                                     />
                                  </div>
@@ -1116,7 +1132,7 @@ export default function AssetsMobilePage() {
                      <div className="p-5 space-y-4">
                         <div className="space-y-4">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div><label className={styles.label}>ModÃ¨le</label><input type="text" value={formData.model || ""} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className={styles.input} /></div>
+                              <div><label className={styles.label}>Modéle</label><input type="text" value={formData.model || ""} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className={styles.input} /></div>
                               <div><label className={styles.label}>Marque</label><input type="text" value={formData.marque || ""} onChange={(e) => setFormData({ ...formData, marque: e.target.value })} className={styles.input} /></div>
                            </div>
 
@@ -1153,4 +1169,3 @@ export default function AssetsMobilePage() {
       </div>
    )
 }
-

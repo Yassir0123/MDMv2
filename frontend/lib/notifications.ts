@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import api from "@/lib/api"
+import { emitNotificationsRefresh, subscribeNotificationsRefresh } from "@/lib/notification-sync"
 
 export interface NotificationItem {
   id: number
@@ -58,14 +59,20 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       void runRefresh()
     }
 
+    const handleSync = () => {
+      void runRefresh()
+    }
+
     window.addEventListener("focus", handleFocus)
     document.addEventListener("visibilitychange", handleFocus)
+    const unsubscribeSync = subscribeNotificationsRefresh(handleSync)
 
     return () => {
       mounted = false
       window.clearInterval(intervalId)
       window.removeEventListener("focus", handleFocus)
       document.removeEventListener("visibilitychange", handleFocus)
+      unsubscribeSync()
     }
   }, [pollMs, refresh])
 
@@ -74,6 +81,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     try {
       setIsMutating(true)
       await api.put(`/notifications/${id}/read`)
+      emitNotificationsRefresh("read-one")
     } catch (error) {
       console.error("Failed to mark notification as read:", error)
       await refresh()
@@ -87,6 +95,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     try {
       setIsMutating(true)
       await api.put("/notifications/read-all")
+      emitNotificationsRefresh("read-all")
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error)
       await refresh()
@@ -101,6 +110,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     try {
       setIsMutating(true)
       await api.delete(`/notifications/${id}`)
+      emitNotificationsRefresh("delete-one")
     } catch (error) {
       console.error("Failed to delete notification:", error)
       setNotifications(previous)

@@ -30,6 +30,8 @@ public class LigneInternetService {
     private MaterielSyncService syncService; // Unified Sync
     @Autowired
     private ArchiveService archiveService;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<LigneInternet> getAll() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -267,6 +269,6 @@ public class LigneInternetService {
         history.setStatusEvent(action);
         history.setDateEvent(LocalDate.now());
         history.setDateRecu(LocalDate.now());
-        historyRepository.save(history);
+        historyRepository.save(historyAdminStampService.stamp(history));
     }
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
   Power, AlertCircle, Globe, Activity, ArrowUpDown,
@@ -105,13 +106,42 @@ export default function AssetsInternetPage() {
     fetchDropdownData()
   }, [])
 
+  useVisiblePolling(() => fetchLines(), 4000, [])
+
+  useVisiblePolling(() => {
+    if (viewMode === "view" && selectedLine?.id) {
+      void fetchLineHistory(selectedLine.id)
+    }
+  }, 4000, [viewMode, selectedLine?.id])
+
   const fetchLines = async () => {
     try {
-      setLoading(true)
+      if (lines.length === 0) {
+        setLoading(true)
+      }
       const res = await api.get("/lignes-internet")
       setLines(Array.isArray(res.data) ? res.data : [])
     } catch (e) { console.error(e); setLines([]) }
     finally { setLoading(false) }
+  }
+
+  const fetchLineHistory = async (lineId: number) => {
+    try {
+      const res = await api.get("/historique-ligne-internet")
+      const lineHistory = Array.isArray(res.data) ? res.data
+        .filter((h: any) => h.materiel && h.materiel.id === lineId)
+        .map((h: any) => ({
+          id: h.id,
+          action: h.statusEvent || "-",
+          utilisateur: h.userNom || "-",
+          entrepotNom: h.entrepotNom || "-",
+          agenceNom: h.agenceNom || "-",
+          departementNom: h.departementNom || "-",
+          chefAgence: h.chefAgenceNom || "-",
+          date: h.dateEvent || "-"
+        })) : []
+      setHistory(lineHistory)
+    } catch (e) { setHistory([]) }
   }
 
   const fetchDropdownData = async () => {
@@ -247,23 +277,8 @@ export default function AssetsInternetPage() {
   const handleView = async (line: LigneInternet) => {
     setSelectedLine(line)
     setViewMode("view")
-    try {
-      const res = await api.get("/historique-ligne-internet")
-      const lineHistory = Array.isArray(res.data) ? res.data
-        .filter((h: any) => h.materiel && h.materiel.id === line.id)
-        .map((h: any) => ({
-          id: h.id,
-          action: h.statusEvent || "-",
-          utilisateur: h.userNom || "-",
-          entrepotNom: h.entrepotNom || "-",
-          agenceNom: h.agenceNom || "-",
-          departementNom: h.departementNom || "-",
-          chefAgence: h.chefAgenceNom || "-",
-          date: h.dateEvent || "-"
-        })) : []
-      setHistory(lineHistory)
-      setHistoryPage(1) // reset pagination when opening new item
-    } catch (e) { setHistory([]) }
+    setHistoryPage(1)
+    await fetchLineHistory(line.id)
   }
 
   const handleSave = async () => {

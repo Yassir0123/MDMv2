@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Search, Plus, Trash2, Edit2, Eye, Building, X,
   ArrowUpDown, MapPin, Phone, User,
@@ -222,6 +223,7 @@ export default function AgencePage({ onSelectAgence }: { onSelectAgence?: (agenc
   // --- STATE ---
   const [agences, setAgences] = useState<Agence[]>([])
   const [loading, setLoading] = useState(true)
+  const hasLoadedAgencesRef = useRef(false)
   const [viewMode, setViewMode] = useState<ViewMode>("list")
   const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null)
 
@@ -255,13 +257,29 @@ export default function AgencePage({ onSelectAgence }: { onSelectAgence?: (agenc
     fetchDropdowns()
   }, [])
 
+  useVisiblePolling(() => fetchAgences(), 4000, [])
+
+  useVisiblePolling(() => {
+    if (viewMode === "detail" && selectedAgence?.id) {
+      void fetchHistorique(selectedAgence.id)
+    }
+  }, 4000, [viewMode, selectedAgence?.id])
+
   const fetchAgences = async () => {
+    const shouldShowLoading = !hasLoadedAgencesRef.current
     try {
-      setLoading(true)
+      if (shouldShowLoading) {
+        setLoading(true)
+      }
       const res = await api.get("/agences")
       setAgences(Array.isArray(res.data) ? res.data : [])
+      hasLoadedAgencesRef.current = true
     } catch (e) { console.error(e) }
-    finally { setLoading(false) }
+    finally {
+      if (shouldShowLoading) {
+        setLoading(false)
+      }
+    }
   }
 
   const fetchDropdowns = async () => {
@@ -768,7 +786,8 @@ export default function AgencePage({ onSelectAgence }: { onSelectAgence?: (agenc
 
         {/* Main Table */}
         <div className={styles.card}>
-          <table className="w-full min-w-[700px]">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px]">
             <thead>
               <tr>
                 <th className={styles.th}>ID</th>
@@ -837,6 +856,7 @@ export default function AgencePage({ onSelectAgence }: { onSelectAgence?: (agenc
               ))}
             </tbody>
           </table>
+          </div>
           {totalPages > 1 && (
             <Pagination current={page} total={totalPages} setPage={setPage} />
           )}

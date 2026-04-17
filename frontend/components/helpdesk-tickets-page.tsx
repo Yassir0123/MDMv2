@@ -16,10 +16,13 @@ import {
   HELPDESK_LEVEL_LABELS,
   HELPDESK_SCOPE_LABELS,
   HELPDESK_STATUS_LABELS,
+  emitHelpdeskSync,
   formatHelpdeskDate,
   getHelpdeskFlagTone,
   getHelpdeskStatusTone,
+  subscribeHelpdeskSync,
 } from "@/lib/helpdesk"
+import { emitNotificationsRefresh } from "@/lib/notification-sync"
 import {
   ArrowLeft,
   Bold,
@@ -45,6 +48,20 @@ import {
   Trash2,
   Underline,
   X,
+  User,
+  UserCheck,
+  Calendar,
+  MapPin,
+  Tag,
+  Activity,
+  MonitorSmartphone,
+  Laptop,
+  FileText,
+  Shield,
+  CheckCircle2,
+  Lock,
+  MessageSquare,
+  Info,
 } from "lucide-react"
 
 type ViewMode = "list" | "create" | "detail"
@@ -83,6 +100,22 @@ function matchFilterCondition(value: string, term: string, condition: FilterCond
     default:
       return source.includes(query)
   }
+}
+
+function mergeHelpdeskFiles(currentFiles: File[], nextFiles: File[]) {
+  const merged = [...currentFiles]
+  for (const nextFile of nextFiles) {
+    const exists = merged.some(
+      (file) =>
+        file.name === nextFile.name &&
+        file.size === nextFile.size &&
+        file.lastModified === nextFile.lastModified
+    )
+    if (!exists) {
+      merged.push(nextFile)
+    }
+  }
+  return merged
 }
 
 function HelpdeskFilterToolbar({
@@ -339,9 +372,8 @@ function ToggleList({
           return (
             <label
               key={option.id}
-              className={`flex items-start gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors ${
-                active ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
-              }`}
+              className={`flex items-start gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors ${active ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                }`}
             >
               <input
                 type="checkbox"
@@ -540,6 +572,8 @@ export default function HelpdeskTicketsPage() {
   const [replyBody, setReplyBody] = useState("")
   const [saving, setSaving] = useState(false)
   const [adminDirty, setAdminDirty] = useState(false)
+  const hasLoadedBootstrapRef = useRef(false)
+  const hasLoadedTicketsRef = useRef(false)
 
   const syncAdminStateFromDetail = (ticketDetail: HelpdeskTicketDetail) => {
     setAdminState({
@@ -558,27 +592,43 @@ export default function HelpdeskTicketsPage() {
   }
 
   const loadBootstrap = async () => {
-    const response = await api.get<HelpdeskBootstrap>("/helpdesk/bootstrap")
-    setBootstrap(response.data)
-    setDraft((current) => ({
-      ...emptyDraft(response.data),
-      mode: current.mode,
-    }))
-    setScope(response.data.allowedScopes[0] || "ALL")
+    const shouldShowLoading = !hasLoadedBootstrapRef.current
+    try {
+      if (shouldShowLoading) {
+        setLoading(true)
+      }
+      const response = await api.get<HelpdeskBootstrap>("/helpdesk/bootstrap")
+      setBootstrap(response.data)
+      setDraft((current) => ({
+        ...emptyDraft(response.data),
+        mode: current.mode,
+      }))
+      setScope(response.data.allowedScopes[0] || "ALL")
+      hasLoadedBootstrapRef.current = true
+    } finally {
+      if (shouldShowLoading) {
+        setLoading(false)
+      }
+    }
   }
 
   const loadTickets = async () => {
-    setTicketsLoading(true)
+    const shouldShowLoading = !hasLoadedTicketsRef.current
     try {
+      if (shouldShowLoading) {
+        setTicketsLoading(true)
+      }
       const response = await api.get<HelpdeskTicketSummary[]>("/helpdesk/tickets")
       setTickets(response.data)
+      hasLoadedTicketsRef.current = true
     } finally {
-      setTicketsLoading(false)
+      if (shouldShowLoading) {
+        setTicketsLoading(false)
+      }
     }
   }
 
   const refreshBase = async () => {
-    setLoading(true)
     try {
       void loadTickets().catch((error) => {
         console.error(error)
@@ -588,8 +638,6 @@ export default function HelpdeskTicketsPage() {
     } catch (error) {
       console.error(error)
       alert("Impossible de charger le helpdesk.")
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -605,7 +653,7 @@ export default function HelpdeskTicketsPage() {
     if (!bootstrap) return
     const interval = window.setInterval(() => {
       void loadTickets().catch(() => undefined)
-    }, 10000)
+    }, 6000)
     return () => window.clearInterval(interval)
   }, [bootstrap])
 
@@ -621,9 +669,21 @@ export default function HelpdeskTicketsPage() {
           }
         })
         .catch(() => undefined)
-    }, 8000)
+    }, 4000)
     return () => window.clearInterval(interval)
   }, [adminDirty, detail?.id, view])
+
+  useEffect(() => {
+    if (!bootstrap) return
+
+    return subscribeHelpdeskSync((payload) => {
+      void loadTickets().catch(() => undefined)
+
+      if (view === "detail" && detail && (!payload.ticketId || payload.ticketId === detail.id)) {
+        void fetchFreshTicketDetail(detail.id).catch(() => undefined)
+      }
+    })
+  }, [bootstrap, detail, view, adminDirty])
 
   const openTicket = async (ticketId: number, ticketSummary?: HelpdeskTicketSummary) => {
     if (bootstrap?.role === "Administrateur" && ticketSummary) {
@@ -698,12 +758,17 @@ export default function HelpdeskTicketsPage() {
   }, [page, visibleTickets])
 
   const kpis = useMemo(() => {
-    const pending = tickets.filter((item) => ["en_attente", "en_progress"].includes(item.status)).length
-    const resolved = tickets.filter((item) => ["resolu", "clos"].includes(item.status)).length
-    const action = tickets.filter((item) => item.status === "nouveau").length
+    const newCount = tickets.filter((item) => item.status === "nouveau").length
+    const waitingCount = tickets.filter((item) => item.status === "en_attente").length
+    const progressCount = tickets.filter((item) => item.status === "en_progress").length
+    const resolvedCount = tickets.filter((item) => item.status === "resolu").length
+    const closedCount = tickets.filter((item) => item.status === "clos").length
+    const pending = waitingCount + progressCount
+    const resolved = resolvedCount + closedCount
+    const action = newCount
     return [
-      { label: "Tickets visibles", value: tickets.length, tone: "slate", icon: LifeBuoy, hint: "Tous statuts confondus" },
-      { label: "En cours", value: pending, tone: "amber", icon: RefreshCw, hint: "En attente + En progress" },
+      { label: "Tickets visibles", value: tickets.length, tone: "slate", icon: LifeBuoy, hint: `${newCount} nouv. | ${waitingCount} attente | ${progressCount} progress | ${resolvedCount} resolu | ${closedCount} clos` },
+      { label: "En cours", value: pending, tone: "amber", icon: RefreshCw, hint: `${waitingCount} en attente + ${progressCount} en progress` },
       { label: "Résolus", value: resolved, tone: "emerald", icon: ShieldCheck },
       { label: "À traiter", value: action, tone: "blue", icon: CircleAlert },
     ]
@@ -718,7 +783,7 @@ export default function HelpdeskTicketsPage() {
   const headerSummaryText = useMemo(() => {
     const pending = tickets.filter((item) => ["en_attente", "en_progress"].includes(item.status)).length
     const resolved = tickets.filter((item) => ["resolu", "clos"].includes(item.status)).length
-    return `${tickets.length} tickets au total | ${pending} en cours | ${resolved} rÃ©solus`
+    return `${tickets.length} tickets au total | ${pending} en cours | ${resolved} résolus`
   }, [tickets])
 
   const displayKpis = useMemo(
@@ -728,14 +793,38 @@ export default function HelpdeskTicketsPage() {
         hint:
           card.label === "En cours"
             ? "En attente + En progress"
-            : card.label === "RÃ©solus"
-              ? "RÃ©solu + Clos"
-              : card.label === "Ã€ traiter"
+            : card.label === "Résolus"
+              ? "Résolu + Clos"
+              : card.label === "À traiter"
                 ? "Statut Nouveau"
                 : "Tous statuts confondus",
       })),
     [kpis]
   )
+
+  const finalDisplayKpis = useMemo(() => {
+    const newCount = tickets.filter((item) => item.status === "nouveau").length
+    const waitingCount = tickets.filter((item) => item.status === "en_attente").length
+    const progressCount = tickets.filter((item) => item.status === "en_progress").length
+    const resolvedCount = tickets.filter((item) => item.status === "resolu").length
+    const closedCount = tickets.filter((item) => item.status === "clos").length
+
+    return kpis.map((card, index) => {
+      if (index === 0) {
+        return {
+          ...card,
+          hint: `${newCount} nouv. | ${waitingCount} attente | ${progressCount} progress | ${resolvedCount} resolu | ${closedCount} clos`,
+        }
+      }
+      if (index === 1) {
+        return { ...card, hint: `${waitingCount} en attente + ${progressCount} en progress` }
+      }
+      if (index === 2) {
+        return { ...card, hint: `${resolvedCount} resolu + ${closedCount} clos` }
+      }
+      return { ...card, hint: `${newCount} nouveau` }
+    })
+  }, [kpis, tickets])
 
   const devicePool = useMemo(() => {
     if (!bootstrap) return []
@@ -791,12 +880,19 @@ export default function HelpdeskTicketsPage() {
       })
       setDetail(response.data)
       setFiles([])
+      emitHelpdeskSync({ ticketId: response.data.id, reason: "create" })
+      emitNotificationsRefresh("helpdesk-create")
       await loadTickets()
       await loadBootstrap()
       setView("detail")
     } catch (error) {
       console.error(error)
-      alert("La création du ticket a échoué.")
+      const status = (error as any)?.response?.status
+      if (status === 413) {
+        alert("Les fichiers joints sont trop volumineux. Limite actuelle: 25 Mo par fichier et 30 Mo par requête.")
+      } else {
+        alert("La création du ticket a échoué.")
+      }
     } finally {
       setSaving(false)
     }
@@ -806,6 +902,18 @@ export default function HelpdeskTicketsPage() {
     if (!detail || !replyBody.trim()) return
     setSaving(true)
     try {
+      if (bootstrap?.role !== "Administrateur") {
+        const freshTicket = await fetchFreshTicketDetail(detail.id)
+        if (freshTicket.status === "resolu" || freshTicket.status === "clos") {
+          alert("Ce ticket est verrouillé.")
+          return
+        }
+        if (!freshTicket.canReply) {
+          alert("Vous pourrez répondre uniquement quand le dernier message administrateur sera en statut pending.")
+          return
+        }
+      }
+
       const response = await api.post<HelpdeskTicketDetail>(`/helpdesk/tickets/${detail.id}/messages`, {
         body: replyBody,
       })
@@ -813,6 +921,8 @@ export default function HelpdeskTicketsPage() {
       syncAdminStateFromDetail(response.data)
       setReplyBody("")
       setReplyOpen(false)
+      emitHelpdeskSync({ ticketId: response.data.id, reason: "message" })
+      emitNotificationsRefresh("helpdesk-message")
       await loadTickets()
     } catch (error) {
       console.error(error)
@@ -836,6 +946,8 @@ export default function HelpdeskTicketsPage() {
       const response = await api.put<HelpdeskTicketDetail>(`/helpdesk/tickets/${detail.id}/admin`, adminState)
       setDetail(response.data)
       syncAdminStateFromDetail(response.data)
+      emitHelpdeskSync({ ticketId: response.data.id, reason: "admin-save" })
+      emitNotificationsRefresh("helpdesk-admin-save")
       await loadTickets()
     } catch (error) {
       console.error(error)
@@ -867,6 +979,7 @@ export default function HelpdeskTicketsPage() {
     if (detail?.id === ticketId) {
       syncAdminStateFromDetail(response.data)
     }
+    emitHelpdeskSync({ ticketId, reason: "claim" })
     await loadTickets()
     return response.data
   }
@@ -878,6 +991,22 @@ export default function HelpdeskTicketsPage() {
       syncAdminStateFromDetail(response.data)
     }
     return response.data
+  }
+
+  const ensureRequesterCanReplyBeforeAction = async (ticket: HelpdeskTicketDetail) => {
+    if (bootstrap?.role === "Administrateur") return true
+
+    const freshTicket = await fetchFreshTicketDetail(ticket.id)
+    if (freshTicket.status === "resolu" || freshTicket.status === "clos") {
+      alert("Ce ticket est verrouillé.")
+      return false
+    }
+    if (!freshTicket.canReply) {
+      alert("Vous pourrez répondre uniquement quand le dernier message administrateur sera en statut pending.")
+      return false
+    }
+
+    return true
   }
 
   const ensureAdminClaimBeforeAction = async (ticket: HelpdeskTicketSummary | HelpdeskTicketDetail) => {
@@ -953,6 +1082,13 @@ export default function HelpdeskTicketsPage() {
   const handleAdminReplyClick = async () => {
     if (!detail) return
     const allowed = await ensureAdminClaimBeforeAction(detail)
+    if (!allowed) return
+    setReplyOpen(true)
+  }
+
+  const handleRequesterReplyClick = async () => {
+    if (!detail) return
+    const allowed = await ensureRequesterCanReplyBeforeAction(detail)
     if (!allowed) return
     setReplyOpen(true)
   }
@@ -1068,11 +1204,10 @@ export default function HelpdeskTicketsPage() {
               key={item}
               type="button"
               onClick={() => setScope(item)}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                scope === item
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900"
-              }`}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${scope === item
+                ? "bg-slate-900 text-white"
+                : "bg-slate-50 border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                }`}
             >
               {HELPDESK_SCOPE_LABELS[item]}
             </button>
@@ -1200,9 +1335,8 @@ export default function HelpdeskTicketsPage() {
                 <button
                   key={type}
                   onClick={() => setDraft((current) => ({ ...current, type }))}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-                    draft.type === type ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-                  }`}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold ${draft.type === type ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                    }`}
                 >
                   {type}
                 </button>
@@ -1241,15 +1375,35 @@ export default function HelpdeskTicketsPage() {
               id="helpdesk-file-input"
               type="file"
               multiple
-              onChange={(event) => setFiles(Array.from(event.target.files || []))}
+              onChange={(event) => {
+                const nextFiles = Array.from(event.target.files || [])
+                setFiles((current) => mergeHelpdeskFiles(current, nextFiles))
+                event.currentTarget.value = ""
+              }}
               className="sr-only"
             />
             {files.length > 0 && (
               <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-muted-foreground">
+                    Plusieurs sélections sont autorisées. Chaque fichier sera enregistré séparément.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setFiles([])}
+                    className="text-xs font-semibold text-muted-foreground hover:text-destructive"
+                  >
+                    Tout retirer
+                  </button>
+                </div>
                 {files.map((file) => (
-                  <div key={file.name} className="flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2">
+                  <div
+                    key={`${file.name}-${file.size}-${file.lastModified}`}
+                    className="flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2"
+                  >
                     <span className="text-sm text-foreground truncate">{file.name}</span>
                     <button
+                      type="button"
                       onClick={() => setFiles((current) => current.filter((item) => item !== file))}
                       className="text-muted-foreground hover:text-destructive"
                     >
@@ -1273,17 +1427,16 @@ export default function HelpdeskTicketsPage() {
                 Mode de création
               </label>
               <div className="flex gap-2">
-              {(["self", "collaborator"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setDraft((current) => ({ ...current, mode, deviceIds: [] }))}
-                  className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold ${
-                    draft.mode === mode ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {mode === "self" ? "Mes tickets" : "Collaborateurs"}
-                </button>
-              ))}
+                {(["self", "collaborator"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setDraft((current) => ({ ...current, mode, deviceIds: [] }))}
+                    className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold ${draft.mode === mode ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                      }`}
+                  >
+                    {mode === "self" ? "Mes tickets" : "Collaborateurs"}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -1460,7 +1613,7 @@ export default function HelpdeskTicketsPage() {
                     void handleAdminReplyClick()
                     return
                   }
-                  setReplyOpen(true)
+                  void handleRequesterReplyClick()
                 }}
                 className="btn btn-primary"
               >
@@ -1709,6 +1862,333 @@ export default function HelpdeskTicketsPage() {
     </div>
   )
 
+  const getAvatarInitials = (name?: string | null) => {
+    if (!name) return "??"
+    const parts = name.split(" ")
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    return name.substring(0, 2).toUpperCase()
+  }
+
+  const modernDetailView = detail && (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-visible">
+      {/* Left Column: Header & Conversation */}
+      <div className="lg:col-span-2 space-y-6">
+        {/* Modern Header Card */}
+        <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-secondary/20 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="space-y-3">
+              <button onClick={() => setView("list")} className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider">
+                <ArrowLeft className="w-4 h-4" />
+                Retour à la liste
+              </button>
+              <h2 className="text-2xl font-bold text-foreground leading-tight">
+                <span className="text-muted-foreground mr-2 font-mono">#{detail.id}</span>
+                {detail.subject}
+              </h2>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${getHelpdeskStatusTone(detail.status)}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                  {HELPDESK_STATUS_LABELS[detail.status] || detail.status}
+                </span>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${getHelpdeskFlagTone(detail.flag)}`}>
+                  <Tag className="w-3 h-3" />
+                  {detail.flag || "NONE"}
+                </span>
+                {ticketLocked && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase text-slate-700">
+                    <Lock className="w-3 h-3" /> Ticket verrouillé
+                  </span>
+                )}
+              </div>
+            </div>
+            {(detail.canAdminManage || detail.canReply) && (
+              <button
+                onClick={() => {
+                  if (bootstrap.role === "Administrateur") {
+                    void handleAdminReplyClick()
+                    return
+                  }
+                  void handleRequesterReplyClick()
+                }}
+                className="btn btn-primary whitespace-nowrap shadow-md shadow-primary/20 hover:shadow-primary/30 transition-shadow"
+              >
+                <Send className="w-4 h-4" />
+                Répondre
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Conversation Area */}
+        <div className="rounded-2xl border border-border bg-card p-0 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-4 border-b border-border bg-secondary/30 flex items-center justify-between sticky top-0 backdrop-blur-md z-10">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+              <MessageSquare className="w-4 h-4 text-primary" /> Conversation
+            </h3>
+            {detail.observerOnly && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                <CircleAlert className="w-3 h-3" />
+                Lecture seule
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 space-y-6">
+            {detail.messages.map((message) => {
+              const mine = message.senderId === bootstrap!.currentUser.id
+              return (
+                <div key={message.id} className={`flex gap-4 ${mine ? "flex-row-reverse" : "flex-row"}`}>
+                  <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold shadow-sm ${mine ? "bg-primary text-primary-foreground" : "bg-slate-200 text-slate-700"}`}>
+                    {getAvatarInitials(message.senderName)}
+                  </div>
+
+                  <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[85%]`}>
+                    <div className="flex items-center gap-2 mb-1.5 px-1">
+                      <span className="text-xs font-bold text-foreground">{mine ? "Vous" : message.senderName}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{message.senderRole}</span>
+                      <span className="text-[10px] text-muted-foreground">• {formatHelpdeskDate(message.latestDate)}</span>
+                      {message.statusSent && <span className="text-[10px] font-bold text-primary">• {message.statusSent}</span>}
+                    </div>
+
+                    <div className={`rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed ${mine ? "bg-primary text-primary-foreground rounded-tr-xl" : "bg-secondary text-foreground border border-border rounded-tl-xl"}`}>
+                      <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: message.body }} />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: Ticket Info & Actions */}
+      <div className="space-y-6">
+
+        {/* Compact Metadata Card */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border bg-secondary/30">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+              <Info className="w-4 h-4 text-primary" /> Détails du ticket
+            </h3>
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <User className="w-3 h-3" /> Demandeur
+                </p>
+                <p className="text-sm font-medium text-foreground">
+                  {detail.demandeur.name}
+                </p>
+                {detail.demandeur.matricule && <p className="text-[11px] text-muted-foreground">{detail.demandeur.matricule}</p>}
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <UserCheck className="w-3 h-3" /> Assignation
+                </p>
+                {detail.applierName ? (
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{detail.applierName}</p>
+                    {detail.applierMatricule && <p className="text-[11px] text-muted-foreground">{detail.applierMatricule}</p>}
+                  </div>
+                ) : bootstrap.role === "Administrateur" && detail.canClaim ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void claimTicket(detail.id).catch((error: any) => alert(error?.response?.data?.message || "Ce ticket est déjà claimé."))
+                    }}
+                    className="mt-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold transition-colors"
+                  >
+                    Réclamer
+                  </button>
+                ) : (
+                  <p className="text-sm font-medium text-muted-foreground italic">Non assigné</p>
+                )}
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <Activity className="w-3 h-3" /> Type
+                </p>
+                <p className="text-sm font-medium text-foreground capitalize">{detail.type || "—"}</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <Tag className="w-3 h-3" /> Catégorie
+                </p>
+                <p className="text-sm font-medium text-foreground">{detail.category || "—"}</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <Calendar className="w-3 h-3" /> Création
+                </p>
+                <p className="text-sm font-medium text-foreground">{formatHelpdeskDate(detail.dateSent)}</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                  <MapPin className="w-3 h-3" /> Localisation
+                </p>
+                <p className="text-sm font-medium text-foreground">{detail.localisation || "—"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Devices Panel */}
+        {detail.devices.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-border bg-secondary/30">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+                <MonitorSmartphone className="w-4 h-4 text-primary" /> Matériel concerné
+              </h3>
+            </div>
+            <div className="p-4">
+              <div className="space-y-2">
+                {detail.devices.map((device) => (
+                  <div key={device.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20 hover:bg-secondary/60 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shrink-0 shadow-sm">
+                      <Laptop className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{device.deviceName || "Matériel inconnu"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate font-medium">
+                        {[device.userName, device.matricule, device.serialNumber].filter(Boolean).join(" • ")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Attachments Panel */}
+        {detail.files.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-border bg-secondary/30">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+                <Paperclip className="w-4 h-4 text-primary" /> Pièces jointes
+              </h3>
+            </div>
+            <div className="p-4 space-y-2">
+              {detail.files.map((file) => (
+                <button
+                  key={file.id}
+                  onClick={() => void downloadFile(file.id, file.fileName)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/40 hover:bg-secondary/80 border border-transparent hover:border-border transition-all group shadow-sm hover:shadow"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform border border-slate-100">
+                    <FileText className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground truncate text-left flex-1">{file.fileName}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Admin Form / Read-only States */}
+        {detail.canAdminManage ? (
+          <div className="rounded-2xl border-2 border-indigo-50/50 dark:border-indigo-950/50 bg-card shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-blue-500"></div>
+            <div className="px-5 py-4 border-b border-border bg-gradient-to-b from-indigo-50/30 to-transparent dark:from-indigo-900/10">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+                <Shield className="w-4 h-4 text-indigo-500" /> Administration
+              </h3>
+            </div>
+            <div className="p-5 space-y-5 bg-card">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Statut</label>
+                <select
+                  value={adminState.status}
+                  onChange={(event) => updateAdminState({ status: event.target.value })}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  {Object.keys(HELPDESK_STATUS_LABELS).map((status) => (
+                    <option key={status} value={status}>{HELPDESK_STATUS_LABELS[status]}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Importance</label>
+                  <select
+                    value={adminState.importance}
+                    onChange={(event) => updateAdminState({ importance: event.target.value })}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Non défini</option>
+                    {Object.entries(HELPDESK_LEVEL_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Impact</label>
+                  <select
+                    value={adminState.impact}
+                    onChange={(event) => updateAdminState({ impact: event.target.value })}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Non défini</option>
+                    {Object.entries(HELPDESK_LEVEL_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <SearchableUserPicker
+                title="Observateurs additionnels"
+                options={bootstrap!.observerOptions}
+                selectedIds={adminState.observerIds}
+                onChange={(observerIds) => updateAdminState({ observerIds })}
+                placeholder="Ajouter un observateur..."
+                emptyText="Aucun observateur sélectionné."
+              />
+
+              <button
+                onClick={() => void handleAdminSaveClick()}
+                disabled={saving || !adminDirty}
+                className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-md transition-all ${saving || !adminDirty ? "bg-slate-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/25"}`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {saving ? "Sauvegarde..." : adminDirty ? "Enregistrer modifications" : "À jour"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {detail.viewerMode === "admin" && ticketLocked && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 shadow-sm flex items-start gap-3">
+                <Lock className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="font-bold text-amber-900 mb-1">Ticket fermé</p>
+                  <p>Ce ticket est {detail.status === "clos" ? "clos" : "résolu"} et ne peut plus être modifié ni recevoir de nouveaux messages.</p>
+                </div>
+              </div>
+            )}
+            {!detail.canReply && detail.viewerMode === "requester" && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600 shadow-sm flex items-start gap-3">
+                <Info className="w-5 h-5 shrink-0 text-slate-400 mt-0.5" />
+                <div>
+                  <p>Vous pourrez répondre uniquement quand le dernier message administrateur sera en statut pending.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-full bg-background">
       <div className="bg-card border-b border-border sticky top-0 z-20 backdrop-blur-md bg-card/80">
@@ -1737,7 +2217,7 @@ export default function HelpdeskTicketsPage() {
                 className="btn btn-primary"
               >
                 <Plus className="w-4 h-4" />
-                CrÃ©er un ticket
+                Créer un ticket
               </button>
             ) : (
               <button disabled className="btn btn-secondary opacity-60 cursor-not-allowed">
@@ -1751,7 +2231,7 @@ export default function HelpdeskTicketsPage() {
 
       <div className="max-w-7xl mx-auto p-4 lg:p-5 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {displayKpis.map((card) => {
+          {finalDisplayKpis.map((card) => {
             const Icon = card.icon
             const toneClasses =
               card.tone === "emerald"
@@ -1780,7 +2260,7 @@ export default function HelpdeskTicketsPage() {
 
         {view === "list" && listView}
         {view === "create" && createView}
-        {view === "detail" && detailView}
+        {view === "detail" && modernDetailView}
       </div>
 
       {replyOpen && detail && (
@@ -1797,13 +2277,12 @@ export default function HelpdeskTicketsPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <textarea
-                rows={8}
-                value={replyBody}
-                onChange={(event) => setReplyBody(event.target.value)}
-                placeholder="Saisissez votre réponse..."
-                className="mdm-input min-h-[220px]"
-              />
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Message
+                </label>
+                <RichEditor value={replyBody} onChange={setReplyBody} />
+              </div>
               <div className="flex items-center justify-end gap-3">
                 <button onClick={() => setReplyOpen(false)} className="btn btn-secondary">Annuler</button>
                 <button onClick={() => void submitReply()} disabled={saving || !replyBody.trim()} className="btn btn-primary">

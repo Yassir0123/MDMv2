@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import api from "@/lib/api"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, ChevronDown, Trash2, Smartphone, Wifi,
    RotateCw, History, User, Mail, Users,
@@ -88,16 +89,25 @@ export default function UsersManagementPage() {
    const [showReaffectModal, setShowReaffectModal] = useState<number | null>(null)
    const [page, setPage] = useState(1)
    const PAGE_SIZE = 10
+   const hasLoadedUsersRef = useRef(false)
 
    useEffect(() => {
-      fetchUsers()
-      fetchOptions()
+      void fetchUsers()
+      void fetchOptions()
    }, [])
 
-   const fetchUsers = async () => {
+   useVisiblePolling(() => {
+      void fetchUsers({ silent: true })
+   }, 4000, [])
+
+   const fetchUsers = async ({ silent = false }: { silent?: boolean } = {}) => {
       try {
+         if (!silent && !hasLoadedUsersRef.current) {
+            setIsLoading(true)
+         }
          const res = await api.get("/users/management")
          setUsers(res.data)
+         hasLoadedUsersRef.current = true
          setIsLoading(false)
       } catch (error) {
          console.error("Failed to fetch users", error)
@@ -194,8 +204,9 @@ export default function UsersManagementPage() {
 
    const handleDeactivateUser = async (userId: number) => {
       try {
-         await api.post(`/users/${userId}/desactiver`)
-         fetchUsers()
+         const res = await api.post(`/users/${userId}/desactiver`)
+         setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
+         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
       setShowDeactivateModal(null)
    }
@@ -203,14 +214,15 @@ export default function UsersManagementPage() {
    const handleActiverUser = async (userId: number) => {
       if (!confirm("Voulez-vous réactiver cet utilisateur ?")) return
       try {
-         await api.put(`/users/${userId}/activer`)
-         fetchUsers()
+         const res = await api.put(`/users/${userId}/activer`)
+         setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
+         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
    }
 
    const handleReaffectUser = async (userId: number) => {
       try {
-         await api.post(`/users/${userId}/reaffecter`, {
+         const res = await api.post(`/users/${userId}/reaffecter`, {
             updateOrg: reaffectUpdateOrg,
             updateManager: reaffectUpdateManager,
             departementId: reaffectDepartementId !== "" ? reaffectDepartementId : null,
@@ -218,7 +230,8 @@ export default function UsersManagementPage() {
             entrepotId: reaffectEntrepotId !== "" ? reaffectEntrepotId : null,
             managerId: selectedChief !== "" ? Number(selectedChief) : null
          })
-         fetchUsers()
+         setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
+         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
       setShowReaffectModal(null)
       setReaffectDepartementId(-1)

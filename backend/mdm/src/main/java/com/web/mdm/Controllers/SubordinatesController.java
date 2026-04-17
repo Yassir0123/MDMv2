@@ -3,6 +3,7 @@ package com.web.mdm.Controllers;
 import com.web.mdm.Models.*;
 import com.web.mdm.Repository.*;
 import com.web.mdm.Services.SubordinateMaterielService;
+import com.web.mdm.Services.HistoryAdminStampService;
 import com.web.mdm.Services.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class SubordinatesController {
     private final EntrepotRepository entrepotRepository;
     private final SubordinateMaterielService subordinateMaterielService;
     private final NotificationService notificationService;
+    private final HistoryAdminStampService historyAdminStampService;
 
     public SubordinatesController(
             UsersRepository usersRepository,
@@ -35,7 +37,8 @@ public class SubordinatesController {
             DepartementRepository departementRepository,
             EntrepotRepository entrepotRepository,
             SubordinateMaterielService subordinateMaterielService,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            HistoryAdminStampService historyAdminStampService) {
         this.usersRepository = usersRepository;
         this.materielRepository = materielRepository;
         this.historiqueAffectationRepository = historiqueAffectationRepository;
@@ -44,6 +47,7 @@ public class SubordinatesController {
         this.entrepotRepository = entrepotRepository;
         this.subordinateMaterielService = subordinateMaterielService;
         this.notificationService = notificationService;
+        this.historyAdminStampService = historyAdminStampService;
     }
 
     // --- GET subordinates for a manager ---
@@ -111,7 +115,7 @@ public class SubordinatesController {
 
         // Build historique
         HistoriqueAffectation hist = buildHistorique(user, "dettacher", motif, managerId);
-        historiqueAffectationRepository.save(hist);
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         // Update user status
         user.setStatus(Users.UserStatus.detacher);
@@ -139,7 +143,7 @@ public class SubordinatesController {
 
         // Build historique
         HistoriqueAffectation hist = buildHistorique(user, "desactiver", motif, managerId);
-        historiqueAffectationRepository.save(hist);
+        historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         // Update user status
         user.setStatus(Users.UserStatus.desactiver);

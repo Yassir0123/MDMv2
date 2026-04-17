@@ -13,6 +13,8 @@ public class HistoriqueAffectationService {
 
     @Autowired
     private HistoriqueAffectationRepository historiqueAffectationRepository;
+    @Autowired
+    private HistoryAdminStampService historyAdminStampService;
 
     public List<HistoriqueAffectation> getAll() {
         return historiqueAffectationRepository.findAll();
@@ -35,7 +37,7 @@ public class HistoriqueAffectationService {
     }
 
     public HistoriqueAffectation save(HistoriqueAffectation historique) {
-        return historiqueAffectationRepository.save(historique);
+        return historiqueAffectationRepository.save(historyAdminStampService.stamp(historique));
     }
 
     public void delete(Integer id) {

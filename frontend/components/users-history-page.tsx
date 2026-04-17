@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { ReactElement } from "react"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Search, RotateCw, ArrowLeft,
   ArrowUpDown, User, FileText, Calendar,
@@ -105,6 +106,7 @@ export default function UserHistoryPage({ onBack }: { onBack: () => void }) {
   // --- State ---
   const [history, setHistory] = useState<HistoryRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const hasLoadedHistoryRef = useRef(false)
 
   // Advanced Filter State
   const [searchTerm, setSearchTerm] = useState("")
@@ -118,14 +120,30 @@ export default function UserHistoryPage({ onBack }: { onBack: () => void }) {
   const [isExporting, setIsExporting] = useState(false)
   const PAGE_SIZE = 10
 
+  const fetchHistory = async () => {
+    try {
+      if (!hasLoadedHistoryRef.current) {
+        setIsLoading(true)
+      }
+      const res = await api.get("/historique-affectation")
+      setHistory(Array.isArray(res.data) ? res.data : [])
+    } catch (err) {
+      console.error("Failed to fetch historique-affectation", err)
+    } finally {
+      hasLoadedHistoryRef.current = true
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
     let mounted = true
-    api.get("/historique-affectation")
-      .then(res => { if (mounted) setHistory(Array.isArray(res.data) ? res.data : []) })
-      .catch(err => { console.error("Failed to fetch historique-affectation", err) })
-      .finally(() => { if (mounted) setIsLoading(false) })
+    void fetchHistory().then(() => {
+      if (!mounted) return
+    })
     return () => { mounted = false }
   }, [])
+
+  useVisiblePolling(() => fetchHistory(), 5000, [])
 
   const userNameById = useMemo(() => {
     const map = new Map<number, string>()
