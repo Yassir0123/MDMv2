@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class MaterielSyncService {
@@ -24,7 +24,7 @@ public class MaterielSyncService {
     public void syncInventory(String type, Integer specificId, String sn, String num, String operator,
             String name, Users user, Agence agence, Entrepot entrepot, Departement dept,
             String status, String statusAffect,
-            LocalDate dRecu, LocalDate dEnvoie, LocalDate dAnnuler, LocalDate dCreation) {
+            LocalDateTime dRecu, LocalDateTime dEnvoie, LocalDateTime dAnnuler, LocalDateTime dCreation) {
 
         // Find existing or create new
         Materiel mat = materielRepository.findBySpecificIdAndTypeMateriel(specificId, type)
@@ -61,7 +61,7 @@ public class MaterielSyncService {
     // --- SYNC HISTORY ---
     public void syncHistory(String type, Integer specificId, String sn, String num, String operator,
             String name, Users user, Agence agence, Entrepot entrepot, Departement dept,
-            String event, LocalDate dateEvent) {
+            String event, LocalDateTime dateEvent) {
 
         HistoriqueMateriel h = new HistoriqueMateriel();
         h.setTypeMateriel(type);

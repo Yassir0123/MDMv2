@@ -5,7 +5,7 @@ import com.web.mdm.Repository.ArchiveRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class ArchiveService {
@@ -20,7 +20,7 @@ public class ArchiveService {
         archive.setSn(sn);
         archive.setOperateur(operateur);
         archive.setNomMateriel(nomMateriel);
-        archive.setDateDeletion(LocalDate.now());
+        archive.setDateDeletion(LocalDateTime.now());
         
         archiveRepository.save(archive);
     }

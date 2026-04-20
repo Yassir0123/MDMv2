@@ -36,6 +36,12 @@ interface UserData {
    isManager?: number
 }
 
+interface EntrepotOption {
+   id: number
+   siteNom?: string
+   siteRef?: { libeller: string }
+}
+
 function Pagination({ current, total, setPage }: { current: number, total: number, setPage: (page: number) => void }) {
    const go = (next: number) => {
       if (next < 1) next = 1
@@ -74,7 +80,7 @@ export default function UsersManagementPage() {
    const [users, setUsers] = useState<UserData[]>([])
    const [departements, setDepartements] = useState<{ id: number, nom: string }[]>([])
    const [agences, setAgences] = useState<{ id: number, nom: string }[]>([])
-   const [entrepots, setEntrepots] = useState<{ id: number, siteRef?: { libeller: string } }[]>([])
+   const [entrepots, setEntrepots] = useState<EntrepotOption[]>([])
 
    const [reaffectDepartementId, setReaffectDepartementId] = useState<number | "">(-1)
    const [reaffectAgenceId, setReaffectAgenceId] = useState<number | "">(-1)
@@ -126,6 +132,11 @@ export default function UsersManagementPage() {
          setAgences(aRes.data)
          setEntrepots(eRes.data)
       } catch (err) { console.error("Failed to fetch options", err) }
+   }
+
+   const getEntrepotLabel = (entrepot?: EntrepotOption | UserData["entrepot"]) => {
+      if (!entrepot) return "—"
+      return entrepot.siteRef?.libeller || ("siteNom" in entrepot ? entrepot.siteNom : undefined) || `Entrepôt #${entrepot.id}`
    }
 
    // --- Styles (Matching SIM Page) ---
@@ -603,7 +614,7 @@ export default function UsersManagementPage() {
                                              >
                                                 <option value="-1">Ne pas modifier</option>
                                                 <option value="">Aucun</option>
-                                                {entrepots.map(e => <option key={e.id} value={e.id}>{e.siteRef?.libeller}</option>)}
+                                                {entrepots.map(e => <option key={e.id} value={e.id}>{getEntrepotLabel(e)}</option>)}
                                              </select>
                                           </div>
                                        </div>

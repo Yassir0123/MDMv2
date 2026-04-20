@@ -2,7 +2,7 @@ package com.web.mdm.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class HistoriqueAffectation implements AdminTrackedHistory {
@@ -51,7 +51,7 @@ public class HistoriqueAffectation implements AdminTrackedHistory {
 
     private String statusEvent;
     private String fonction;
-    private LocalDate dateEvent;
+    private LocalDateTime dateEvent;
     private String motif;
 
     @Column(name = "chef_departement_id")
@@ -265,11 +265,11 @@ public class HistoriqueAffectation implements AdminTrackedHistory {
         this.fonction = fonction;
     }
 
-    public LocalDate getDateEvent() {
+    public LocalDateTime getDateEvent() {
         return dateEvent;
     }
 
-    public void setDateEvent(LocalDate dateEvent) {
+    public void setDateEvent(LocalDateTime dateEvent) {
         this.dateEvent = dateEvent;
     }
 

@@ -70,11 +70,12 @@ public class HelpdeskController {
         return helpdeskService.createTicket(payload, files);
     }
 
-    @PostMapping("/tickets/{ticketId}/messages")
+    @PostMapping(path = "/tickets/{ticketId}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public HelpdeskTicketDetailDto replyToTicket(
             @PathVariable Integer ticketId,
-            @RequestBody TicketReplyRequest payload) {
-        return helpdeskService.replyToTicket(ticketId, payload);
+            @RequestPart("payload") TicketReplyRequest payload,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        return helpdeskService.replyToTicket(ticketId, payload, files);
     }
 
     @PutMapping("/tickets/{ticketId}/admin")

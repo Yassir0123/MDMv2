@@ -1,3 +1,5 @@
+import { formatDateTimeValue } from "@/lib/utils"
+
 export type HelpdeskScope = "ALL" | "MYTICKETS" | "TAGGED" | "TARGETED"
 
 export type HelpdeskSyncPayload = {
@@ -219,7 +221,5 @@ export function getHelpdeskFlagTone(flag?: string | null) {
 }
 
 export function formatHelpdeskDate(value?: string | null) {
-  if (!value) return "—"
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+  return formatDateTimeValue(value, "-")
 }

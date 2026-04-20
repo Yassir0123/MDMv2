@@ -5,7 +5,7 @@ import com.web.mdm.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,8 +59,8 @@ public class MaterielsService {
     public Materiels save(Materiels mat) {
         // --- CREATION ---
         if (mat.getId() == null) {
-            mat.setDateCreation(LocalDate.now());
-            mat.setDateRecu(LocalDate.now());
+            mat.setDateCreation(LocalDateTime.now());
+            mat.setDateRecu(LocalDateTime.now());
             if (mat.getStatusAffectation() == null)
                 mat.setStatusAffectation("non_affecter");
 
@@ -114,7 +114,7 @@ public class MaterielsService {
             // Unified Log
             syncService.syncHistory(mat.getTypeMateriel(), mat.getId(), mat.getSn(), null,
                     null, mat.getDesignation(), oldUser, oldAgence, oldEntrepot, oldDept, "DESAFFECTATION",
-                    LocalDate.now());
+                    LocalDateTime.now());
 
             if (oldUser != null) {
                 notificationService.notifyAdminAssetUnassignment(mat.getTypeMateriel(), mat.getDesignation(),
@@ -166,7 +166,7 @@ public class MaterielsService {
                         .findFirst().orElse(null);
 
                 if (existing != null && !existing.getId().equals(matId)) {
-                    throw new IllegalArgumentException("Cet utilisateur possède déjà un " + mat.getTypeMateriel()
+                    throw new IllegalArgumentException("Cet utilisateur possÃ¨de dÃ©jÃ  un " + mat.getTypeMateriel()
                             + " actif (" + existing.getDesignation() + ")");
                 }
             }
@@ -226,7 +226,7 @@ public class MaterielsService {
         if (mat.getStatus() == null || mat.getStatus().isEmpty())
             mat.setStatus("Bon");
 
-        mat.setDateEnvoie(LocalDate.now());
+        mat.setDateEnvoie(LocalDateTime.now());
         repository.save(mat);
 
         // 3. Sync Unified
@@ -246,9 +246,9 @@ public class MaterielsService {
         h.setDesignation(mat.getDesignation());
         h.setTypeMateriel(mat.getTypeMateriel());
         h.setStatusEvent(event);
-        h.setDateEvent(LocalDate.now());
+        h.setDateEvent(LocalDateTime.now());
         h.setDateRecu(mat.getDateRecu());
-        h.setDateEnvoie(LocalDate.now());
+        h.setDateEnvoie(LocalDateTime.now());
 
         // User snapshot
         if (user != null) {
@@ -265,9 +265,9 @@ public class MaterielsService {
                 h.setUserFonction(user.getFonctionRef().getNom());
         } else {
             // Fallback label for non-user assignment
-            String location = (dept != null) ? "Dépt: " + dept.getNom()
+            String location = (dept != null) ? "DÃ©pt: " + dept.getNom()
                     : (agence != null ? "Agence: " + agence.getNom()
-                            : (entrepot != null ? "Entrepôt" : "Stock Global"));
+                            : (entrepot != null ? "EntrepÃ´t" : "Stock Global"));
             h.setUserNom(location);
         }
 
@@ -306,7 +306,7 @@ public class MaterielsService {
         if (!event.equals("UPDATE")) {
             syncService.syncHistory(mat.getTypeMateriel(), mat.getId(), mat.getSn(), null,
                     null, mat.getDesignation() + " " + mat.getMarque(),
-                    user, agence, entrepot, dept, event, LocalDate.now());
+                    user, agence, entrepot, dept, event, LocalDateTime.now());
         }
     }
 }

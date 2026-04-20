@@ -499,7 +499,6 @@ function SearchableUserPicker({
 
       <div ref={containerRef} className="relative z-20 space-y-3 overflow-visible">
         <div className="relative">
-          <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
           <input
             value={query}
             onFocus={() => setOpen(true)}
@@ -508,7 +507,7 @@ function SearchableUserPicker({
               setOpen(true)
             }}
             placeholder={placeholder}
-            className="mdm-input h-11 pl-10"
+            className="mdm-input h-11 pl-4"
           />
           {open && (
             <div className="absolute inset-x-0 bottom-[calc(100%+8px)] z-[80] max-h-[260px] overflow-auto rounded-2xl border border-border bg-card shadow-xl">
@@ -561,6 +560,7 @@ export default function HelpdeskTicketsPage() {
   const [deviceFilter, setDeviceFilter] = useState<DeviceFilter>("all")
   const [deviceQuery, setDeviceQuery] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const [replyFiles, setReplyFiles] = useState<File[]>([])
   const [adminState, setAdminState] = useState({
     status: "nouveau",
     importance: "",
@@ -914,12 +914,18 @@ export default function HelpdeskTicketsPage() {
         }
       }
 
-      const response = await api.post<HelpdeskTicketDetail>(`/helpdesk/tickets/${detail.id}/messages`, {
-        body: replyBody,
+      const formData = new FormData()
+      formData.append("payload", new Blob([JSON.stringify({ body: replyBody })], { type: "application/json" }))
+      if (bootstrap?.role !== "Administrateur") {
+        replyFiles.forEach((file) => formData.append("files", file))
+      }
+      const response = await api.post<HelpdeskTicketDetail>(`/helpdesk/tickets/${detail.id}/messages`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       })
       setDetail(response.data)
       syncAdminStateFromDetail(response.data)
       setReplyBody("")
+      setReplyFiles([])
       setReplyOpen(false)
       emitHelpdeskSync({ ticketId: response.data.id, reason: "message" })
       emitNotificationsRefresh("helpdesk-message")
@@ -1083,6 +1089,7 @@ export default function HelpdeskTicketsPage() {
     if (!detail) return
     const allowed = await ensureAdminClaimBeforeAction(detail)
     if (!allowed) return
+    setReplyFiles([])
     setReplyOpen(true)
   }
 
@@ -1090,6 +1097,7 @@ export default function HelpdeskTicketsPage() {
     if (!detail) return
     const allowed = await ensureRequesterCanReplyBeforeAction(detail)
     if (!allowed) return
+    setReplyFiles([])
     setReplyOpen(true)
   }
 
@@ -1981,7 +1989,7 @@ export default function HelpdeskTicketsPage() {
                 <p className="text-sm font-medium text-foreground">
                   {detail.demandeur.name}
                 </p>
-                {detail.demandeur.matricule && <p className="text-[11px] text-muted-foreground">{detail.demandeur.matricule}</p>}
+                {detail.demandeur.matricule && <p className="text-[11px] text-muted-foreground">MAT: {detail.demandeur.matricule}</p>}
               </div>
 
               <div>
@@ -1991,7 +1999,7 @@ export default function HelpdeskTicketsPage() {
                 {detail.applierName ? (
                   <div>
                     <p className="text-sm font-medium text-foreground">{detail.applierName}</p>
-                    {detail.applierMatricule && <p className="text-[11px] text-muted-foreground">{detail.applierMatricule}</p>}
+                    {detail.applierMatricule && <p className="text-[11px] text-muted-foreground">MAT: {detail.applierMatricule}</p>}
                   </div>
                 ) : bootstrap.role === "Administrateur" && detail.canClaim ? (
                   <button
@@ -2057,7 +2065,7 @@ export default function HelpdeskTicketsPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-foreground truncate">{device.deviceName || "Matériel inconnu"}</p>
                       <p className="text-[11px] text-muted-foreground truncate font-medium">
-                        {[device.userName, device.matricule, device.serialNumber].filter(Boolean).join(" • ")}
+                        {[device.userName, device.matricule ? `MAT: ${device.matricule}` : null, device.serialNumber].filter(Boolean).join(" • ")}
                       </p>
                     </div>
                   </div>
@@ -2271,7 +2279,7 @@ export default function HelpdeskTicketsPage() {
                 <p className="text-lg font-semibold text-foreground">Répondre au ticket #{detail.id}</p>
                 <p className="text-sm text-muted-foreground mt-1">L'envoi du message ne modifie pas le statut automatiquement.</p>
               </div>
-              <button onClick={() => setReplyOpen(false)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => { setReplyOpen(false); setReplyFiles([]) }} className="text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -2283,8 +2291,100 @@ export default function HelpdeskTicketsPage() {
                 </label>
                 <RichEditor value={replyBody} onChange={setReplyBody} />
               </div>
+
+              {bootstrap?.role !== "Administrateur" && (
+              <div className="rounded-2xl border border-dashed border-border p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Paperclip className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">Pièces jointes</p>
+                </div>
+
+                {detail.files.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground block">
+                      Fichiers actuels
+                    </label>
+                    <div className="space-y-2">
+                      {detail.files.map((file) => (
+                        <button
+                          key={file.id}
+                          type="button"
+                          onClick={() => void downloadFile(file.id, file.fileName)}
+                          className="w-full flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-left hover:bg-secondary/50 transition-colors"
+                        >
+                          <span className="text-sm text-foreground truncate">{file.fileName}</span>
+                          <span className="text-[11px] font-semibold text-muted-foreground">Télécharger</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground block">
+                    Ajouter des fichiers
+                  </label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label
+                      htmlFor="helpdesk-reply-file-input"
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                      Ajouter des fichiers
+                    </label>
+                    <span className="text-sm text-muted-foreground">
+                      {replyFiles.length > 0 ? `${replyFiles.length} fichier(s) en ajout` : "Aucun nouveau fichier"}
+                    </span>
+                  </div>
+                  <input
+                    id="helpdesk-reply-file-input"
+                    type="file"
+                    multiple
+                    onChange={(event) => {
+                      const nextFiles = Array.from(event.target.files || [])
+                      setReplyFiles((current) => mergeHelpdeskFiles(current, nextFiles))
+                      event.currentTarget.value = ""
+                    }}
+                    className="sr-only"
+                  />
+
+                  {replyFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-muted-foreground">
+                          Ces fichiers seront ajoutés aux pièces jointes déjà présentes sur le ticket.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setReplyFiles([])}
+                          className="text-xs font-semibold text-muted-foreground hover:text-destructive"
+                        >
+                          Tout retirer
+                        </button>
+                      </div>
+                      {replyFiles.map((file) => (
+                        <div
+                          key={`${file.name}-${file.size}-${file.lastModified}`}
+                          className="flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2"
+                        >
+                          <span className="text-sm text-foreground truncate">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setReplyFiles((current) => current.filter((item) => item !== file))}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              )}
+
               <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setReplyOpen(false)} className="btn btn-secondary">Annuler</button>
+                <button onClick={() => { setReplyOpen(false); setReplyFiles([]) }} className="btn btn-secondary">Annuler</button>
                 <button onClick={() => void submitReply()} disabled={saving || !replyBody.trim()} className="btn btn-primary">
                   <Send className="w-4 h-4" />
                   {saving ? "Envoi..." : "Envoyer"}

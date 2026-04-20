@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,7 +49,7 @@ public class DepartementController {
                 d.getChefDepartment() != null ? d.getChefDepartment().getId() : null,
                 d.getChefDepartment() != null
                         ? d.getChefDepartment().getNom() + " " + d.getChefDepartment().getPrenom()
-                        : "Non Assigné");
+                        : "Non AssignÃ©");
     }
 
     @Transactional
@@ -110,7 +110,7 @@ public class DepartementController {
             hist.setDepartement(saved);
             hist.setDepartmentNom(saved.getNom());
             hist.setStatusEvent("CHANGEMENT_RESPONSABLE");
-            hist.setDateEvent(LocalDate.now());
+            hist.setDateEvent(LocalDateTime.now());
 
             // New chef info
             if (newChef != null) {

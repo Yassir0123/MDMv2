@@ -1,5 +1,7 @@
 "use client"
 
+import { formatDateTimeValue } from "@/lib/utils"
+
 export type ExcelColumn<T extends Record<string, unknown>> = {
   header: string
   key: keyof T
@@ -38,7 +40,7 @@ const normalizeFileName = (value: string) =>
 const normalizeCellValue = (value: unknown): string | number | boolean => {
   if (value === null || value === undefined || value === "") return "-"
   if (typeof value === "number" || typeof value === "boolean") return value
-  if (value instanceof Date) return value.toLocaleString("fr-FR")
+  if (value instanceof Date) return formatDateTimeValue(value, "-")
   return String(value)
 }
 

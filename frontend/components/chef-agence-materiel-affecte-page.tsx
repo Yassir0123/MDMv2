@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth-context"
 import { useState, useEffect } from "react"
 import api from "@/lib/api"
+import { formatDateTimeValue } from "@/lib/utils"
 import {
    Package, CheckCircle, AlertCircle,
    Smartphone, Wifi, CircuitBoard, Monitor,
@@ -222,7 +223,7 @@ export default function ChefAgenceMaterielAffectePage() {
                                           {isReceived ? "Reçu le" : isAnnule ? "Signalé le" : "Envoyé le"}
                                        </span>
                                        <span className="text-[10px] text-slate-600">
-                                          {isReceived ? aff.dateRecu : aff.dateEnvoie || "-"}
+                                          {formatDateTimeValue(isReceived ? aff.dateRecu : aff.dateEnvoie, "-")}
                                        </span>
                                     </div>
                                  </div>

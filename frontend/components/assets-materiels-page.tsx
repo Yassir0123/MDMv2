@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
@@ -423,9 +424,7 @@ export default function AssetsMaterielsPage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportHistory = async () => {
@@ -847,7 +846,7 @@ export default function AssetsMaterielsPage() {
                           <td className={`${styles.td} text-slate-600`}>{h.agenceNom}</td>
                           <td className={`${styles.td} text-slate-600`}>{h.departementNom}</td>
                           <td className={`${styles.td} text-slate-600`}>{h.chefAgence}</td>
-                          <td className={`${styles.td} text-right font-mono text-slate-500`}>{new Date(h.date).toLocaleDateString("fr-FR")}</td>
+                          <td className={`${styles.td} text-right font-mono text-slate-500`}>{formatDateTimeValue(h.date, "-")}</td>
                         </tr>
                       ))}
                       {paginatedHistory.length === 0 && <tr><td colSpan={7} className="p-12 text-center text-slate-400 italic">Aucun historique disponible</td></tr>}

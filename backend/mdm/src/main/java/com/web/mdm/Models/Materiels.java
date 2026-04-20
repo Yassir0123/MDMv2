@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
@@ -38,10 +38,10 @@ public class Materiels {
     private String status; // "active", "inactive"
     private String statusAffectation; // "non_affecter", "affecter", etc.
 
-    private LocalDate dateCreation;
-    private LocalDate dateRecu;
-    private LocalDate dateAnnuler;
-    private LocalDate dateEnvoie;
+    private LocalDateTime dateCreation;
+    private LocalDateTime dateRecu;
+    private LocalDateTime dateAnnuler;
+    private LocalDateTime dateEnvoie;
 
     @OneToMany(mappedBy = "materiels", cascade = CascadeType.ALL)
     @JsonIgnore
@@ -136,35 +136,35 @@ public class Materiels {
         this.statusAffectation = statusAffectation;
     }
 
-    public LocalDate getDateCreation() {
+    public LocalDateTime getDateCreation() {
         return dateCreation;
     }
 
-    public void setDateCreation(LocalDate dateCreation) {
+    public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 

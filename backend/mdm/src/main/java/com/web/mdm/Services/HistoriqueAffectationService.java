@@ -28,6 +28,10 @@ public class HistoriqueAffectationService {
         return historiqueAffectationRepository.findByAgenceId(agenceId);
     }
 
+    public List<HistoriqueAffectation> getByEntrepotId(Integer entrepotId) {
+        return historiqueAffectationRepository.findByEntrepotId(entrepotId);
+    }
+
     public List<HistoriqueAffectation> getByDepartementId(Integer departementId) {
         return historiqueAffectationRepository.findByDepartementId(departementId);
     }

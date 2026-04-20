@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import api from "@/lib/api"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, RotateCw, Eye, Trash2,
@@ -342,7 +343,7 @@ export default function MaterielAnnulePage() {
                                  <label className="text-[10px] font-bold text-red-500 uppercase flex items-center gap-1.5 mb-0.5"><AlertTriangle className="w-3 h-3" /> Raison (Signalement)</label>
                                  <p className="text-xs font-bold text-red-800">Voir l'historique pour le commentaire.</p>
                               </div>
-                              <div><label className={styles.label}>Date Annulation</label><p className="text-[10px] font-mono text-slate-600">{selectedMaterial.dateAssigned ? new Date(selectedMaterial.dateAssigned).toLocaleDateString("fr-FR") : "N/A"}</p></div>
+                              <div><label className={styles.label}>Date Annulation</label><p className="text-[10px] font-mono text-slate-600">{formatDateTimeValue(selectedMaterial.dateAssigned, "N/A")}</p></div>
                            </div>
                         </div>
 

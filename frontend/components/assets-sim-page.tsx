@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw,
@@ -511,9 +512,7 @@ export default function AssetsSIMPage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportHistory = async () => {
@@ -740,7 +739,7 @@ export default function AssetsSIMPage() {
                         <p className="font-semibold text-slate-900 text-sm leading-tight">{selectedSim.userNom}</p>
                         <p className="text-slate-500 text-[10px] mt-0.5">{selectedSim.departementNom}</p>
                         <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-600 font-mono font-medium bg-emerald-50 px-2 py-0.5 rounded w-fit">
-                          <Calendar className="w-3 h-3" /> Depuis {selectedSim.dateEnvoie || "N/A"}
+                          <Calendar className="w-3 h-3" /> Depuis {formatDateTimeValue(selectedSim.dateEnvoie, "N/A")}
                         </div>
                       </div>
                     </div>
@@ -807,7 +806,7 @@ export default function AssetsSIMPage() {
                           <td className={styles.td}>{entry.agenceNom || "-"}</td>
                           <td className={styles.td}>{entry.departementNom || "-"}</td>
                           <td className={styles.td}>{entry.chefAgence}</td>
-                          <td className={`${styles.td} text-right font-mono text-slate-500`}>{new Date(entry.date).toLocaleDateString("fr-FR")}</td>
+                          <td className={`${styles.td} text-right font-mono text-slate-500`}>{formatDateTimeValue(entry.date, "-")}</td>
                         </tr>
                       ))}
                       {paginatedHistory.length === 0 && <tr><td colSpan={7} className="p-12 text-center text-slate-400 italic">Aucun historique disponible</td></tr>}

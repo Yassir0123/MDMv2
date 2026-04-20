@@ -5,7 +5,7 @@ import com.web.mdm.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,7 +59,7 @@ public class CarteSimService {
 
         if (sim.getId() == null) {
             // --- CREATION LOGIC ---
-            sim.setDateRecu(LocalDate.now());
+            sim.setDateRecu(LocalDateTime.now());
             if (sim.getStatusAffectation() == null)
                 sim.setStatusAffectation(CarteSim.StatusAffectation.non_affecter);
 
@@ -86,7 +86,7 @@ public class CarteSimService {
             fillHistoryContext(history, savedSim.getAgence(), savedSim.getEntrepot(), savedSim.getDepartement());
 
             history.setStatusEvent("CREATION");
-            history.setDateEvent(LocalDate.now());
+            history.setDateEvent(LocalDateTime.now());
             historyRepository.save(historyAdminStampService.stamp(history));
 
             // 2. Sync
@@ -95,12 +95,12 @@ public class CarteSimService {
                     savedSim.getUser(), savedSim.getAgence(), savedSim.getEntrepot(), savedSim.getDepartement(),
                     savedSim.getStatus() != null ? savedSim.getStatus().toString() : "active",
                     savedSim.getStatusAffectation().toString(),
-                    savedSim.getDateRecu(), savedSim.getDateEnvoie(), null, LocalDate.now());
+                    savedSim.getDateRecu(), savedSim.getDateEnvoie(), null, LocalDateTime.now());
 
             syncService.syncHistory("CarteSim", savedSim.getId(), savedSim.getSn(), savedSim.getNumero(),
                     savedSim.getOperateur(), "Carte SIM " + savedSim.getNumero(),
                     null, savedSim.getAgence(), savedSim.getEntrepot(), savedSim.getDepartement(), "CREATION",
-                    LocalDate.now());
+                    LocalDateTime.now());
 
             return savedSim;
         }
@@ -129,7 +129,7 @@ public class CarteSimService {
                     .filter(s -> s.getUser() != null && s.getUser().getId().equals(userId)).findFirst().orElse(null);
             if (existing != null && !existing.getId().equals(simId)) {
                 throw new IllegalArgumentException(
-                        "Cet utilisateur possède déjà une Carte SIM active (" + existing.getNumero() + ")");
+                        "Cet utilisateur possÃ¨de dÃ©jÃ  une Carte SIM active (" + existing.getNumero() + ")");
             }
         }
 
@@ -177,8 +177,8 @@ public class CarteSimService {
         fillHistoryContext(history, userAgence, userEntrepot, userDepartement);
 
         history.setStatusEvent(eventType);
-        history.setDateEvent(LocalDate.now());
-        history.setDateEnvoie(LocalDate.now());
+        history.setDateEvent(LocalDateTime.now());
+        history.setDateEnvoie(LocalDateTime.now());
         historyRepository.save(historyAdminStampService.stamp(history));
 
         // 2. Update SIM - Store ALL user IDs
@@ -188,18 +188,18 @@ public class CarteSimService {
         sim.setDepartement(userDepartement);
         sim.setStatus(CarteSim.Status.active);
         sim.setStatusAffectation(CarteSim.StatusAffectation.affecter);
-        sim.setDateEnvoie(LocalDate.now());
+        sim.setDateEnvoie(LocalDateTime.now());
         repository.save(sim);
 
         // 3. Sync with all IDs
         syncService.syncInventory("CarteSim", sim.getId(), sim.getSn(), sim.getNumero(),
                 sim.getOperateur(), "Carte SIM " + sim.getNumero(),
                 user, userAgence, userEntrepot, userDepartement,
-                "active", "affecter", sim.getDateRecu(), LocalDate.now(), null, null);
+                "active", "affecter", sim.getDateRecu(), LocalDateTime.now(), null, null);
 
         syncService.syncHistory("CarteSim", sim.getId(), sim.getSn(), sim.getNumero(),
                 sim.getOperateur(), "Carte SIM " + sim.getNumero(),
-                user, userAgence, userEntrepot, userDepartement, eventType, LocalDate.now());
+                user, userAgence, userEntrepot, userDepartement, eventType, LocalDateTime.now());
 
         notificationService.notifyAdminAssetAssignment("Carte SIM", sim.getNumero(), user.getId());
     }
@@ -222,13 +222,13 @@ public class CarteSimService {
             fillHistoryContext(history, sim.getAgence(), sim.getEntrepot(), sim.getDepartement());
 
             history.setStatusEvent("DESAFFECTATION");
-            history.setDateEvent(LocalDate.now());
-            history.setDateRecu(LocalDate.now());
+            history.setDateEvent(LocalDateTime.now());
+            history.setDateRecu(LocalDateTime.now());
             historyRepository.save(historyAdminStampService.stamp(history));
 
             syncService.syncHistory("CarteSim", sim.getId(), sim.getSn(), sim.getNumero(),
                     sim.getOperateur(), "Carte SIM " + sim.getNumero(),
-                    user, sim.getAgence(), sim.getEntrepot(), sim.getDepartement(), "DESAFFECTATION", LocalDate.now());
+                    user, sim.getAgence(), sim.getEntrepot(), sim.getDepartement(), "DESAFFECTATION", LocalDateTime.now());
 
             notificationService.notifyAdminAssetUnassignment("Carte SIM", sim.getNumero(), user.getId());
         }

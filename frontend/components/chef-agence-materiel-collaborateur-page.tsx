@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useState, useEffect, useMemo, useRef } from "react"
 import {
    Package, CheckCircle2, AlertCircle, Users,
@@ -310,9 +311,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
    }
 
    const formatExportDate = (value?: string) => {
-      if (!value) return "-"
-      const date = new Date(value)
-      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+      return formatDateTimeValue(value, "-")
    }
 
    const handleExport = async () => {
@@ -593,7 +592,7 @@ export default function ChefAgenceMaterielCollaborateurPage() {
                                  </span>
                               </td>
                               <td className="px-4 py-2 text-xs text-slate-600 font-mono">
-                                 {aff.dateEnvoie || "-"}
+                                 {formatDateTimeValue(aff.dateEnvoie, "-")}
                               </td>
                               <td className="px-4 py-2">
                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200 animate-pulse">

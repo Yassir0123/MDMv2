@@ -272,7 +272,7 @@ public class HelpdeskService {
     }
 
     @Transactional
-    public HelpdeskTicketDetailDto replyToTicket(Integer ticketId, TicketReplyRequest request) {
+    public HelpdeskTicketDetailDto replyToTicket(Integer ticketId, TicketReplyRequest request, List<MultipartFile> files) {
         Compte compte = getCurrentCompte();
         Users currentUser = requireCurrentUser(compte);
         Ticket ticket = ticketRepository.findById(ticketId)
@@ -298,6 +298,7 @@ public class HelpdeskService {
             }
             ensureAdminOwnsClaim(ticket, currentUser);
             saveMessage(ticket, currentUser, receiver, body, TicketMessage.MessageDeliveryStatus.pending);
+            storeFiles(ticket, files);
             notifyAdminReply(ticket, currentUser);
         } else {
             if (!Objects.equals(ticket.getSender().getId(), currentUser.getId())) {
@@ -307,6 +308,7 @@ public class HelpdeskService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vous ne pouvez pas repondre pour le moment");
             }
             saveMessage(ticket, currentUser, receiver, body, TicketMessage.MessageDeliveryStatus.sent);
+            storeFiles(ticket, files);
             notifyRequesterReply(ticket, compte, currentUser);
         }
 

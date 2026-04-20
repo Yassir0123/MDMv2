@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,7 +66,7 @@ public class UsersService {
         historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         user.setStatus(Users.UserStatus.detacher);
-        user.setDateDetacher(LocalDate.now());
+        user.setDateDetacher(LocalDateTime.now());
         Users saved = usersRepository.save(user);
         notificationService.notifyAdminManagementAction("Dettacher", saved);
         return saved;
@@ -95,8 +95,8 @@ public class UsersService {
 
         // 3. Update user to archived and nullify organizations
         user.setStatus(Users.UserStatus.archived);
-        user.setDateDesactiver(LocalDate.now());
-        user.setDateSortie(LocalDate.now());
+        user.setDateDesactiver(LocalDateTime.now());
+        user.setDateSortie(LocalDateTime.now());
         user.setAgence(null);
         user.setDepartement(null);
         user.setEntrepot(null);
@@ -146,7 +146,7 @@ public class UsersService {
 
         user.setStatus(Users.UserStatus.active);
 
-        HistoriqueAffectation hist = buildHistorique(user, "reaffectation", "Réaffectation", managerId);
+        HistoriqueAffectation hist = buildHistorique(user, "reaffectation", "RÃ©affectation", managerId);
         historiqueAffectationRepository.save(historyAdminStampService.stamp(hist));
 
         Users saved = usersRepository.save(user);
@@ -196,7 +196,7 @@ public class UsersService {
         hist.setUserAddress(user.getAddress());
         hist.setUserStatus(user.getStatus() != null ? user.getStatus().name() : null);
         hist.setStatusEvent(statusEvent);
-        hist.setDateEvent(LocalDate.now());
+        hist.setDateEvent(LocalDateTime.now());
         hist.setMotif(motif);
         hist.setManagerId(resolveManagerId(managerId, user));
 

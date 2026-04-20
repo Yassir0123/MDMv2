@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Users, UserCheck, UserX, Search, Filter, Plus, X, RotateCw,
@@ -411,9 +412,7 @@ export default function EmployesPage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportUserHistory = async () => {
@@ -685,7 +684,7 @@ export default function EmployesPage() {
                               <td className={`${styles.td} font-medium text-slate-900`}>{h.departmentNom || h.departement?.nom || "—"}</td>
                               <td className={`${styles.td} text-slate-600`}>{h.agenceNom || h.agence?.nom || "—"}</td>
                               <td className={`${styles.td} text-slate-600`}>{h.entrepotNom || h.entrepot?.siteRef?.libeller || "—"}</td>
-                              <td className={`${styles.td} text-right font-mono text-slate-500`}>{h.dateEvent ? new Date(h.dateEvent).toLocaleDateString("fr-FR") : "—"}</td>
+                              <td className={`${styles.td} text-right font-mono text-slate-500`}>{formatDateTimeValue(h.dateEvent, "-")}</td>
                               <td className={`${styles.td} font-medium text-slate-700`}>{manager ? `${manager.nom || ""} ${manager.prenom || ""}`.trim() : "—"}</td>
                             </tr>
                           )
@@ -721,7 +720,7 @@ export default function EmployesPage() {
                             <td className={`${styles.td} font-mono text-slate-600`}>{h.sn || h.numero || "—"}</td>
                             <td className={`${styles.td} font-medium text-slate-800`}>{h.materielName || "—"}</td>
                             <td className={`${styles.td} text-slate-600`}>{h.typeMateriel || "—"}</td>
-                            <td className={`${styles.td} text-right font-mono text-slate-500`}>{h.dateEvent ? new Date(h.dateEvent).toLocaleDateString("fr-FR") : "—"}</td>
+                            <td className={`${styles.td} text-right font-mono text-slate-500`}>{formatDateTimeValue(h.dateEvent, "-")}</td>
                             <td className={`${styles.td} text-slate-600`}>{h.departementNom || "—"}</td>
                             <td className={`${styles.td} text-slate-600`}>{h.agenceNom || "—"}</td>
                             <td className={`${styles.td} text-slate-600`}>{h.entrepotNom || "—"}</td>

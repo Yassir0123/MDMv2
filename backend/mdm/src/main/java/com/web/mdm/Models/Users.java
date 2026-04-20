@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -30,11 +30,11 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
-    private LocalDate dateDesactiver;
+    private LocalDateTime dateDesactiver;
     @Column(name = "date_sortie")
-    private LocalDate dateSortie;
-    private LocalDate dateEmbauche;
-    private LocalDate dateDetacher;
+    private LocalDateTime dateSortie;
+    private LocalDateTime dateEmbauche;
+    private LocalDateTime dateDetacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fonction_id", columnDefinition = "varchar(255)")
@@ -147,35 +147,35 @@ public class Users {
         this.status = status;
     }
 
-    public LocalDate getDateDesactiver() {
+    public LocalDateTime getDateDesactiver() {
         return dateDesactiver;
     }
 
-    public void setDateDesactiver(LocalDate dateDesactiver) {
+    public void setDateDesactiver(LocalDateTime dateDesactiver) {
         this.dateDesactiver = dateDesactiver;
     }
 
-    public LocalDate getDateEmbauche() {
+    public LocalDateTime getDateEmbauche() {
         return dateEmbauche;
     }
 
-    public void setDateEmbauche(LocalDate dateEmbauche) {
+    public void setDateEmbauche(LocalDateTime dateEmbauche) {
         this.dateEmbauche = dateEmbauche;
     }
 
-    public LocalDate getDateSortie() {
+    public LocalDateTime getDateSortie() {
         return dateSortie;
     }
 
-    public void setDateSortie(LocalDate dateSortie) {
+    public void setDateSortie(LocalDateTime dateSortie) {
         this.dateSortie = dateSortie;
     }
 
-    public LocalDate getDateDetacher() {
+    public LocalDateTime getDateDetacher() {
         return dateDetacher;
     }
 
-    public void setDateDetacher(LocalDate dateDetacher) {
+    public void setDateDetacher(LocalDateTime dateDetacher) {
         this.dateDetacher = dateDetacher;
     }
 

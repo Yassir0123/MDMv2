@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import api from "@/lib/api"
+import { formatDateTimeValue } from "@/lib/utils"
 import {
    Search, RotateCw, Eye, Users, Plus,
    UserMinus, UserX, ArrowUpDown, X,
@@ -563,7 +564,7 @@ export default function UserSubordinatesPageV2() {
                                  ) : <span className="text-slate-400 text-xs italic">—</span>}
                               </td>
                               <td className={`${styles.td} font-mono text-slate-400 text-[11px]`}>
-                                 {sub.dateEmbauche ? new Date(sub.dateEmbauche).toLocaleDateString("fr-FR") : "—"}
+                                 {formatDateTimeValue(sub.dateEmbauche, "-")}
                               </td>
                               <td className="px-3 py-2.5 text-right">
                                  <div className="flex justify-end gap-1">
@@ -618,7 +619,7 @@ export default function UserSubordinatesPageV2() {
                                  )}
                               </div>
                               <span className="text-xs font-mono text-slate-400">
-                                 {item.dateEnvoie ? new Date(item.dateEnvoie).toLocaleDateString("fr-FR") : "—"}
+                                 {formatDateTimeValue(item.dateEnvoie, "-")}
                               </span>
                            </div>
                            <div className="flex gap-2 pl-3 pt-2 border-t border-slate-100">

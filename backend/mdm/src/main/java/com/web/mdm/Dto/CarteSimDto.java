@@ -1,6 +1,6 @@
 package com.web.mdm.Dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class CarteSimDto {
     private Integer id;
@@ -27,8 +27,8 @@ public class CarteSimDto {
     private Integer userId;
     private String userNom; 
     private String departementNom;
-    private LocalDate dateEnvoie;
-    private LocalDate dateCreation;
+    private LocalDateTime dateEnvoie;
+    private LocalDateTime dateCreation;
 
     // --- 2. UPDATED CONSTRUCTOR ---
     public CarteSimDto(Integer id, String sn, String numero, String operateur, 
@@ -39,7 +39,7 @@ public class CarteSimDto {
                    Integer entrepotId, String entrepotNom,
                    Integer departementId, String departementNom,
                    Integer userId, String userNom, 
-                   LocalDate dateEnvoie, LocalDate dateCreation){
+                   LocalDateTime dateEnvoie, LocalDateTime dateCreation){
         this.id = id;
         this.sn = sn;
         this.numero = numero;
@@ -79,7 +79,7 @@ public class CarteSimDto {
     
     public String getPin() { return pin; }
     public String getPin2() { return pin2; }
-    public LocalDate getDateCreation() { return dateCreation; }
+    public LocalDateTime getDateCreation() { return dateCreation; }
     public String getPuk() { return puk; }
     public String getPuk2() { return puk2; }
     public String getStatus() { return status; }
@@ -92,5 +92,5 @@ public class CarteSimDto {
     public Integer getUserId() { return userId; }
     public String getUserNom() { return userNom; }
     public String getDepartementNom() { return departementNom; }
-    public LocalDate getDateEnvoie() { return dateEnvoie; }
+    public LocalDateTime getDateEnvoie() { return dateEnvoie; }
 }

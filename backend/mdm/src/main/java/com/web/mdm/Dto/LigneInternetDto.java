@@ -1,6 +1,6 @@
 package com.web.mdm.Dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class LigneInternetDto {
     private Integer id;
@@ -19,15 +19,15 @@ public class LigneInternetDto {
     private Integer departementId;
     private String departementNom;
     
-    private LocalDate dateEnvoie;
-    private LocalDate dateCreation;
+    private LocalDateTime dateEnvoie;
+    private LocalDateTime dateCreation;
 
     public LigneInternetDto(Integer id, String sn, String operateur, String vitesse, 
                             String status, String statusAffectation,
                             Integer agenceId, String agenceNom,
                             Integer entrepotId, String entrepotNom,
                             Integer departementId, String departementNom,
-                            LocalDate dateEnvoie, LocalDate dateCreation) {
+                            LocalDateTime dateEnvoie, LocalDateTime dateCreation) {
         this.id = id;
         this.sn = sn;
         this.operateur = operateur;
@@ -57,6 +57,6 @@ public class LigneInternetDto {
     public String getEntrepotNom() { return entrepotNom; }
     public Integer getDepartementId() { return departementId; }
     public String getDepartementNom() { return departementNom; }
-    public LocalDate getDateEnvoie() { return dateEnvoie; }
-    public LocalDate getDateCreation() { return dateCreation; }
+    public LocalDateTime getDateEnvoie() { return dateEnvoie; }
+    public LocalDateTime getDateCreation() { return dateCreation; }
 }

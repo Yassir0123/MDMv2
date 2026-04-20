@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class SubordinateMaterielService {
@@ -44,7 +44,7 @@ public class SubordinateMaterielService {
         Materiel mat = materielRepository.findById(materielId)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -85,7 +85,7 @@ public class SubordinateMaterielService {
         Materiel mat = materielRepository.findById(materielId)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -126,7 +126,7 @@ public class SubordinateMaterielService {
         return mat;
     }
 
-    private void handleMobileReception(Materiel mat, Integer specificId, LocalDate now) {
+    private void handleMobileReception(Materiel mat, Integer specificId, LocalDateTime now) {
         Mobile m = mobileRepository.findById(specificId).orElseThrow();
         m.setStatusAffectation(Mobile.StatusAffectation.recu);
         m.setDateRecu(now);
@@ -154,7 +154,7 @@ public class SubordinateMaterielService {
         histMobileRepo.save(historyAdminStampService.stamp(hm));
     }
 
-    private void handleMobileAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
+    private void handleMobileAnnulation(Materiel mat, Integer specificId, LocalDateTime now, String motif,
             String commentaire) {
         Mobile m = mobileRepository.findById(specificId).orElseThrow();
         m.setStatusAffectation(Mobile.StatusAffectation.annuler);
@@ -185,7 +185,7 @@ public class SubordinateMaterielService {
         histMobileRepo.save(historyAdminStampService.stamp(hm));
     }
 
-    private void handleSimReception(Materiel mat, Integer specificId, LocalDate now) {
+    private void handleSimReception(Materiel mat, Integer specificId, LocalDateTime now) {
         CarteSim s = carteSimRepository.findById(specificId).orElseThrow();
         s.setStatusAffectation(CarteSim.StatusAffectation.recu);
         s.setDateRecu(now);
@@ -215,7 +215,7 @@ public class SubordinateMaterielService {
         histSimRepo.save(historyAdminStampService.stamp(hs));
     }
 
-    private void handleSimAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
+    private void handleSimAnnulation(Materiel mat, Integer specificId, LocalDateTime now, String motif,
             String commentaire) {
         CarteSim s = carteSimRepository.findById(specificId).orElseThrow();
         s.setStatusAffectation(CarteSim.StatusAffectation.annuler);
@@ -248,7 +248,7 @@ public class SubordinateMaterielService {
         histSimRepo.save(historyAdminStampService.stamp(hs));
     }
 
-    private void handleInternetReception(Materiel mat, Integer specificId, LocalDate now) {
+    private void handleInternetReception(Materiel mat, Integer specificId, LocalDateTime now) {
         LigneInternet l = ligneInternetRepository.findById(specificId).orElseThrow();
         l.setStatusAffectation(LigneInternet.StatusAffectation.recu);
         l.setDateRecu(now);
@@ -277,7 +277,7 @@ public class SubordinateMaterielService {
         histInternetRepo.save(historyAdminStampService.stamp(hl));
     }
 
-    private void handleInternetAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
+    private void handleInternetAnnulation(Materiel mat, Integer specificId, LocalDateTime now, String motif,
             String commentaire) {
         LigneInternet l = ligneInternetRepository.findById(specificId).orElseThrow();
         l.setStatusAffectation(LigneInternet.StatusAffectation.annuler);
@@ -309,7 +309,7 @@ public class SubordinateMaterielService {
         histInternetRepo.save(historyAdminStampService.stamp(hl));
     }
 
-    private void handleMaterielsReception(Materiel mat, Integer specificId, LocalDate now) {
+    private void handleMaterielsReception(Materiel mat, Integer specificId, LocalDateTime now) {
         Materiels it = materielsRepository.findById(specificId).orElseThrow();
         it.setStatusAffectation("recu");
         it.setDateRecu(now);
@@ -335,7 +335,7 @@ public class SubordinateMaterielService {
         histMaterielsRepo.save(historyAdminStampService.stamp(h));
     }
 
-    private void handleMaterielsAnnulation(Materiel mat, Integer specificId, LocalDate now, String motif,
+    private void handleMaterielsAnnulation(Materiel mat, Integer specificId, LocalDateTime now, String motif,
             String commentaire) {
         Materiels it = materielsRepository.findById(specificId).orElseThrow();
         it.setStatusAffectation("annuler");

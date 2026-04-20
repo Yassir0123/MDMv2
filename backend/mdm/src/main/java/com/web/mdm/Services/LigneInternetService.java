@@ -6,7 +6,7 @@ import com.web.mdm.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Objects;
@@ -56,8 +56,8 @@ public class LigneInternetService {
     public LigneInternet save(LigneInternet line) {
         // --- CREATION ---
         if (line.getId() == null) {
-            line.setDateCreation(LocalDate.now());
-            line.setDateRecu(LocalDate.now());
+            line.setDateCreation(LocalDateTime.now());
+            line.setDateRecu(LocalDateTime.now());
             if (line.getStatus() == null)
                 line.setStatus(LigneInternet.Status.active);
             if (line.getStatusAffectation() == null)
@@ -87,12 +87,12 @@ public class LigneInternetService {
                     saved.getOperateur(), "Ligne " + saved.getOperateur() + " " + saved.getVitesse(),
                     null, saved.getAgence(), saved.getEntrepot(), saved.getDepartement(),
                     saved.getStatus().toString(), saved.getStatusAffectation().toString(),
-                    saved.getDateRecu(), saved.getDateEnvoie(), saved.getDateAnnuler(), LocalDate.now());
+                    saved.getDateRecu(), saved.getDateEnvoie(), saved.getDateAnnuler(), LocalDateTime.now());
 
             syncService.syncHistory("LigneInternet", saved.getId(), saved.getSn(), null,
                     saved.getOperateur(), "Ligne " + saved.getOperateur(), null, saved.getAgence(), saved.getEntrepot(),
                     saved.getDepartement(),
-                    "CREATION", LocalDate.now());
+                    "CREATION", LocalDateTime.now());
 
             return saved;
         }
@@ -141,13 +141,13 @@ public class LigneInternetService {
 
         if (agenceChanged || entrepotChanged || deptChanged) {
             existing.setStatusAffectation(LigneInternet.StatusAffectation.affecter);
-            existing.setDateEnvoie(LocalDate.now());
+            existing.setDateEnvoie(LocalDateTime.now());
 
             logSpecificHistory(existing, "REAFFECTATION", newAgence, newEntrepot, newDept);
 
             syncService.syncHistory("LigneInternet", existing.getId(), existing.getSn(), null,
                     existing.getOperateur(), "Ligne " + existing.getOperateur(), null, newAgence, newEntrepot, newDept,
-                    "REAFFECTATION", LocalDate.now());
+                    "REAFFECTATION", LocalDateTime.now());
         }
 
         LigneInternet saved = repository.save(existing);
@@ -165,7 +165,7 @@ public class LigneInternetService {
     public void resilier(Integer id) {
         LigneInternet line = repository.findById(id).orElseThrow();
         line.setStatus(LigneInternet.Status.resilier);
-        line.setDateAnnuler(LocalDate.now());
+        line.setDateAnnuler(LocalDateTime.now());
         repository.save(line);
 
         logSpecificHistory(line, "RESILIATION", line.getAgence(), line.getEntrepot(), line.getDepartement());
@@ -174,12 +174,12 @@ public class LigneInternetService {
                 line.getOperateur(), "Ligne " + line.getOperateur(), null, line.getAgence(), line.getEntrepot(),
                 line.getDepartement(),
                 "resilier", line.getStatusAffectation().toString(),
-                line.getDateRecu(), line.getDateEnvoie(), LocalDate.now(), line.getDateCreation());
+                line.getDateRecu(), line.getDateEnvoie(), LocalDateTime.now(), line.getDateCreation());
 
         syncService.syncHistory("LigneInternet", line.getId(), line.getSn(), null,
                 line.getOperateur(), "Ligne " + line.getOperateur(), null, line.getAgence(), line.getEntrepot(),
                 line.getDepartement(),
-                "RESILIATION", LocalDate.now());
+                "RESILIATION", LocalDateTime.now());
     }
 
     public void activate(Integer id) {
@@ -198,7 +198,7 @@ public class LigneInternetService {
         syncService.syncHistory("LigneInternet", line.getId(), line.getSn(), null,
                 line.getOperateur(), "Ligne " + line.getOperateur(), null, line.getAgence(), line.getEntrepot(),
                 line.getDepartement(),
-                "ACTIVATION", LocalDate.now());
+                "ACTIVATION", LocalDateTime.now());
     }
 
     public void assign(Integer lineId, Integer agenceId, Integer entrepotId, Integer deptId) {
@@ -220,18 +220,18 @@ public class LigneInternetService {
         line.setEntrepot(entrepot);
         line.setDepartement(dept);
         line.setStatusAffectation(LigneInternet.StatusAffectation.affecter);
-        line.setDateEnvoie(LocalDate.now());
+        line.setDateEnvoie(LocalDateTime.now());
         repository.save(line);
 
         syncService.syncInventory("LigneInternet", line.getId(), line.getSn(), null,
                 line.getOperateur(), "Ligne " + line.getOperateur() + " " + line.getVitesse(),
                 null, agence, entrepot, dept,
                 "active", "affecter",
-                line.getDateRecu(), LocalDate.now(), null, line.getDateCreation());
+                line.getDateRecu(), LocalDateTime.now(), null, line.getDateCreation());
 
         syncService.syncHistory("LigneInternet", line.getId(), line.getSn(), null,
                 line.getOperateur(), "Ligne " + line.getOperateur(), null, agence, entrepot, dept,
-                eventType, LocalDate.now());
+                eventType, LocalDateTime.now());
     }
 
     public void delete(Integer id) {
@@ -267,8 +267,8 @@ public class LigneInternetService {
         }
 
         history.setStatusEvent(action);
-        history.setDateEvent(LocalDate.now());
-        history.setDateRecu(LocalDate.now());
+        history.setDateEvent(LocalDateTime.now());
+        history.setDateRecu(LocalDateTime.now());
         historyRepository.save(historyAdminStampService.stamp(history));
     }
 }

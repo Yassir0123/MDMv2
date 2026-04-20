@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -41,13 +41,13 @@ public class CarteSim {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    private LocalDate dateAnnuler;
-    private LocalDate dateRecu; // When the USER received it
-    private LocalDate dateEnvoie; // When the Admin sent/assigned it
+    private LocalDateTime dateAnnuler;
+    private LocalDateTime dateRecu; // When the USER received it
+    private LocalDateTime dateEnvoie; // When the Admin sent/assigned it
     private String tarif;
     private String typeForfait;
     // --- NEW FIELD ---
-    private LocalDate dateCreation; // When the SIM was added to MDM
+    private LocalDateTime dateCreation; // When the SIM was added to MDM
 
     // FIX: Added 'creation' to Enum as requested
     public enum Status {
@@ -176,36 +176,36 @@ public class CarteSim {
         this.user = user;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 
     // New Getter/Setter
-    public LocalDate getDateCreation() {
+    public LocalDateTime getDateCreation() {
         return dateCreation;
     }
 
-    public void setDateCreation(LocalDate dateCreation) {
+    public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
     }
 

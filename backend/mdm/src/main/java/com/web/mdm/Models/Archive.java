@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Archive {
@@ -22,12 +22,12 @@ public class Archive {
     private String operateur;
     private String nomMateriel;
     
-    private LocalDate dateDeletion;
+    private LocalDateTime dateDeletion;
 
     public Archive() {
     }
 
-    public Archive(Integer typeId, String type, String nom, String prenom, String sn, String operateur, String nomMateriel, LocalDate dateDeletion) {
+    public Archive(Integer typeId, String type, String nom, String prenom, String sn, String operateur, String nomMateriel, LocalDateTime dateDeletion) {
         this.typeId = typeId;
         this.type = type;
         this.nom = nom;
@@ -102,11 +102,11 @@ public class Archive {
         this.nomMateriel = nomMateriel;
     }
 
-    public LocalDate getDateDeletion() {
+    public LocalDateTime getDateDeletion() {
         return dateDeletion;
     }
 
-    public void setDateDeletion(LocalDate dateDeletion) {
+    public void setDateDeletion(LocalDateTime dateDeletion) {
         this.dateDeletion = dateDeletion;
     }
 }

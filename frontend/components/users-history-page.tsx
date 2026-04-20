@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import type { ReactElement } from "react"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue, getDateTimeSortValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Search, RotateCw, ArrowLeft,
@@ -276,11 +277,7 @@ export default function UserHistoryPage({ onBack }: { onBack: () => void }) {
     }
   }
 
-  const formatDate = (value: string) => {
-    if (!value) return "—"
-    const d = new Date(value)
-    return isNaN(d.getTime()) ? value : d.toLocaleDateString("fr-FR")
-  }
+  const formatDate = (value: string) => formatDateTimeValue(value, "-")
 
   // 1. Filtering
   const filtered = baseRows.filter((historyRow) => {
@@ -301,8 +298,8 @@ export default function UserHistoryPage({ onBack }: { onBack: () => void }) {
   // 2. Sorting
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "timestamp") {
-      const dateA = new Date(a.timestamp).getTime()
-      const dateB = new Date(b.timestamp).getTime()
+      const dateA = getDateTimeSortValue(a.timestamp)
+      const dateB = getDateTimeSortValue(b.timestamp)
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA
     }
     const aVal = getFieldValue(a, sortBy)

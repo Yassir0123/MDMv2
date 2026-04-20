@@ -1,6 +1,6 @@
 package com.web.mdm.Dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class MaterielsDto {
     private Integer id;
@@ -20,14 +20,14 @@ public class MaterielsDto {
     private Integer userId;
     private String userNom; // Full Name
 
-    private LocalDate dateCreation;
-    private LocalDate dateEnvoie;
+    private LocalDateTime dateCreation;
+    private LocalDateTime dateEnvoie;
 
     public MaterielsDto(Integer id, String sn, String designation, String marque, String typeMateriel,
                         String status, String statusAffectation, Integer agenceId, String agenceNom,
                         Integer entrepotId, String entrepotNom,
                         Integer departementId, String departementNom, Integer userId, String userNom,
-                        LocalDate dateCreation, LocalDate dateEnvoie) {
+                        LocalDateTime dateCreation, LocalDateTime dateEnvoie) {
         this.id = id;
         this.sn = sn;
         this.designation = designation;
@@ -63,6 +63,6 @@ public class MaterielsDto {
     public String getDepartementNom() { return departementNom; }
     public Integer getUserId() { return userId; }
     public String getUserNom() { return userNom; }
-    public LocalDate getDateCreation() { return dateCreation; }
-    public LocalDate getDateEnvoie() { return dateEnvoie; }
+    public LocalDateTime getDateCreation() { return dateCreation; }
+    public LocalDateTime getDateEnvoie() { return dateEnvoie; }
 }

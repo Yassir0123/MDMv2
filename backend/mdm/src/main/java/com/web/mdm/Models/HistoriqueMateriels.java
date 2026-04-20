@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
@@ -23,10 +23,10 @@ public class HistoriqueMateriels implements AdminTrackedHistory, ManagerTrackedH
     private String typeMateriel;
 
     private String statusEvent; // "CREATION", "AFFECTATION"...
-    private LocalDate dateEvent;
-    private LocalDate dateRecu;
-    private LocalDate dateAnnuler;
-    private LocalDate dateEnvoie;
+    private LocalDateTime dateEvent;
+    private LocalDateTime dateRecu;
+    private LocalDateTime dateAnnuler;
+    private LocalDateTime dateEnvoie;
 
     // User Snapshot
     @ManyToOne
@@ -124,35 +124,35 @@ public class HistoriqueMateriels implements AdminTrackedHistory, ManagerTrackedH
         this.statusEvent = statusEvent;
     }
 
-    public LocalDate getDateEvent() {
+    public LocalDateTime getDateEvent() {
         return dateEvent;
     }
 
-    public void setDateEvent(LocalDate dateEvent) {
+    public void setDateEvent(LocalDateTime dateEvent) {
         this.dateEvent = dateEvent;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 

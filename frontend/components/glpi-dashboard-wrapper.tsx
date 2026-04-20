@@ -32,6 +32,7 @@ import ChefAgenceMaterielCollaborateurPage from "@/components/chef-agence-materi
 import ChefAgenceMaterielHistoriquePage from "@/components/chef-agence-materiel-historique-page"
 import AdminEquipementPage from "@/components/admin-equipement-page"
 import AgencePage from "@/components/agence-page"
+import EntrepotPage from "@/components/entrepot-page"
 import AgenceDepartmentsPage from "@/components/agence-departments-page"
 import EmployesPage from "@/components/employes-page"
 import HelpdeskTicketsPage from "@/components/helpdesk-tickets-page"
@@ -62,6 +63,7 @@ type Page =
   | "admin-equipement"
   | "admin-employes"
   | "admin-agence"
+  | "admin-entrepot"
   | "admin-agence-departments"
   | "users-list"
   | "chef-agence-equipement"
@@ -93,6 +95,7 @@ const PAGE_TITLES: Partial<Record<Page, string>> = {
   "admin-equipement": "Équipements",
   "admin-employes": "Gestion des Employés",
   "admin-agence": "Gestion Agences",
+  "admin-entrepot": "Gestion Entrepots",
   "users-list": "Liste Utilisateurs",
   users: "Utilisateurs Désactivés",
   "user-subordinates": "Mes Collaborateurs",
@@ -286,6 +289,8 @@ export default function GLPIDashboardWrapper() {
           return <AdminAccountsPage />
         case "admin-agence":
           return <AgencePage />
+        case "admin-entrepot":
+          return <EntrepotPage />
         case "admin-departments":
           return <AdminDepartmentsPage />
         case "admin-agence-departments":
@@ -415,3 +420,4 @@ export default function GLPIDashboardWrapper() {
     </div>
   )
 }
+

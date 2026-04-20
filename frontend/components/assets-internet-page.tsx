@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue, getDateTimeSortValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
@@ -227,10 +228,17 @@ export default function AssetsInternetPage() {
   // History Sorting
   const sortedHistory = [...filteredHistory].sort((a, b) => {
     // @ts-ignore
-    const aVal = a[historySortBy]?.toString() || ""
+    const aVal = a[historySortBy]
     // @ts-ignore
-    const bVal = b[historySortBy]?.toString() || ""
-    const comparison = aVal.localeCompare(bVal)
+    const bVal = b[historySortBy]
+
+    if (historySortBy === "date") {
+      const dateA = getDateTimeSortValue(aVal)
+      const dateB = getDateTimeSortValue(bVal)
+      return historySortOrder === "asc" ? dateA - dateB : dateB - dateA
+    }
+
+    const comparison = String(aVal || "").localeCompare(String(bVal || ""))
     return historySortOrder === "asc" ? comparison : -comparison
   })
 
@@ -314,9 +322,7 @@ export default function AssetsInternetPage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportHistory = async () => {
@@ -649,7 +655,7 @@ export default function AssetsInternetPage() {
                           <td className={styles.td}>{entry.departementNom}</td>
                           <td className={styles.td}>{entry.chefAgence}</td>
                           <td className={`${styles.td} text-right font-mono text-slate-500`}>
-                            {entry.date && entry.date !== "-" ? new Date(entry.date).toLocaleDateString("fr-FR") : "-"}
+                            {formatDateTimeValue(entry.date, "-")}
                           </td>
                         </tr>
                       ))}

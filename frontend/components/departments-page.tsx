@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue, getDateTimeSortValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, Plus, Trash2, Edit2, Eye, X,
@@ -369,8 +370,8 @@ export default function AdminDepartmentsPage() {
       const bVal = getHistValue(b, histSortBy)
       if (histSortBy === 'dateEvent') {
          return histSortOrder === 'asc'
-            ? new Date(aVal).getTime() - new Date(bVal).getTime()
-            : new Date(bVal).getTime() - new Date(aVal).getTime()
+            ? getDateTimeSortValue(aVal) - getDateTimeSortValue(bVal)
+            : getDateTimeSortValue(bVal) - getDateTimeSortValue(aVal)
       }
       const cmp = aVal.localeCompare(bVal)
       return histSortOrder === 'asc' ? cmp : -cmp
@@ -391,9 +392,7 @@ export default function AdminDepartmentsPage() {
    }
 
    const formatExportDate = (value?: string) => {
-      if (!value) return "-"
-      const date = new Date(value)
-      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+      return formatDateTimeValue(value, "-")
    }
 
    const handleExportHistory = async () => {
@@ -654,7 +653,7 @@ export default function AdminDepartmentsPage() {
                                        </td>
                                        <td className={`${styles.td} text-slate-600`}>{h.agenceNom || "—"}</td>
                                        <td className={`${styles.td} text-right font-mono text-slate-500`}>
-                                          {h.dateEvent ? new Date(h.dateEvent).toLocaleDateString("fr-FR") : "—"}
+                                          {formatDateTimeValue(h.dateEvent, "-")}
                                        </td>
                                     </tr>
                                  ))}

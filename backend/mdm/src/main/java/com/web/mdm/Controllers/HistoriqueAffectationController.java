@@ -27,6 +27,11 @@ public class HistoriqueAffectationController {
         return service.getByAgenceId(agenceId);
     }
 
+    @GetMapping("/entrepot/{entrepotId}")
+    public List<HistoriqueAffectation> getByEntrepot(@PathVariable Integer entrepotId) {
+        return service.getByEntrepotId(entrepotId);
+    }
+
     @GetMapping("/departement/{departementId}")
     public List<HistoriqueAffectation> getByDepartement(@PathVariable Integer departementId) {
         return service.getByDepartementId(departementId);

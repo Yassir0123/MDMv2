@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,7 @@ public class AgenceController {
     }
 
     private AgenceDto toDto(Agence a) {
-        String villeDisplay = "Non Assignée";
+        String villeDisplay = "Non AssignÃ©e";
         Integer villeId = null;
 
         if (a.getVilles() != null && !a.getVilles().isEmpty()) {
@@ -54,7 +54,7 @@ public class AgenceController {
                 villeDisplay,
                 a.getChefAgence() != null ? a.getChefAgence().getId() : null,
                 a.getChefAgence() != null ? a.getChefAgence().getNom() + " " + a.getChefAgence().getPrenom()
-                        : "Non Assigné",
+                        : "Non AssignÃ©",
                 totalEffectif,
                 totalVilles);
     }
@@ -120,7 +120,7 @@ public class AgenceController {
             hist.setAgenceTel(saved.getTel());
             hist.setAgenceEmail(saved.getEmail());
             hist.setStatusEvent("CHANGEMENT_RESPONSABLE");
-            hist.setDateEvent(LocalDate.now());
+            hist.setDateEvent(LocalDateTime.now());
 
             // New chef info
             if (newChef != null) {

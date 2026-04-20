@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -44,12 +44,12 @@ public class Mobile {
     @JoinColumn(name = "department_id")
     private Departement departement;
 
-    private LocalDate dateEnvoie; // Assigned Date
-    private LocalDate dateRecu; // Creation/Stock Date
-    private LocalDate dateAnnuler;
+    private LocalDateTime dateEnvoie; // Assigned Date
+    private LocalDateTime dateRecu; // Creation/Stock Date
+    private LocalDateTime dateAnnuler;
 
     // <--- NEW: To track when it was added to MDM
-    private LocalDate dateCreation;
+    private LocalDateTime dateCreation;
 
     @OneToMany(mappedBy = "materiel")
     @JsonIgnore
@@ -172,35 +172,35 @@ public class Mobile {
         this.departement = departement;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 
-    public LocalDate getDateCreation() {
+    public LocalDateTime getDateCreation() {
         return dateCreation;
     }
 
-    public void setDateCreation(LocalDate dateCreation) {
+    public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
     }
 

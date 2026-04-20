@@ -5,7 +5,7 @@ import com.web.mdm.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,8 +58,8 @@ public class MobileService {
     public Mobile save(Mobile mobile) {
         // --- CREATION ---
         if (mobile.getId() == null) {
-            mobile.setDateCreation(LocalDate.now());
-            mobile.setDateRecu(LocalDate.now());
+            mobile.setDateCreation(LocalDateTime.now());
+            mobile.setDateRecu(LocalDateTime.now());
             if (mobile.getStatusAffectation() == null)
                 mobile.setStatusAffectation(Mobile.StatusAffectation.non_affecter);
 
@@ -88,8 +88,8 @@ public class MobileService {
             history.setModel(saved.getModel());
             history.setType(saved.getType() != null ? saved.getType().toString() : "N/A");
             history.setStatusEvent("CREATION");
-            history.setDateEvent(LocalDate.now());
-            history.setDateRecu(LocalDate.now());
+            history.setDateEvent(LocalDateTime.now());
+            history.setDateRecu(LocalDateTime.now());
             // Context for creation
             if (saved.getAgence() != null) {
                 history.setAgence(saved.getAgence());
@@ -113,12 +113,12 @@ public class MobileService {
                     saved.getUser(), saved.getAgence(), saved.getEntrepot(), saved.getDepartement(),
                     saved.getStatus() != null ? saved.getStatus().toString() : "inactive",
                     saved.getStatusAffectation().toString(),
-                    saved.getDateRecu(), saved.getDateEnvoie(), null, LocalDate.now());
+                    saved.getDateRecu(), saved.getDateEnvoie(), null, LocalDateTime.now());
 
             syncService.syncHistory("Mobile", saved.getId(), saved.getSn(), null, null,
                     saved.getNom() + " " + saved.getModel(), null, saved.getAgence(), saved.getEntrepot(),
                     saved.getDepartement(),
-                    "CREATION", LocalDate.now());
+                    "CREATION", LocalDateTime.now());
 
             return saved;
         }
@@ -153,7 +153,7 @@ public class MobileService {
                     .filter(m -> m.getUser() != null && m.getUser().getId().equals(userId)).findFirst().orElse(null);
             if (existing != null && !existing.getId().equals(mobileId)) {
                 throw new IllegalArgumentException(
-                        "Cet utilisateur possède déjà un Mobile actif (" + existing.getNom() + ")");
+                        "Cet utilisateur possÃ¨de dÃ©jÃ  un Mobile actif (" + existing.getNom() + ")");
             }
         }
 
@@ -185,7 +185,7 @@ public class MobileService {
         Entrepot userEntrepot = user.getEntrepot();
         Departement userDepartement = user.getDepartement();
 
-        // Specific History — enriched
+        // Specific History â€” enriched
         HistoriqueMobile history = new HistoriqueMobile();
         history.setMateriel(mobile);
         history.setSN(mobile.getSn());
@@ -220,8 +220,8 @@ public class MobileService {
             }
         }
         history.setStatusEvent(event);
-        history.setDateEvent(LocalDate.now());
-        history.setDateEnvoie(LocalDate.now());
+        history.setDateEvent(LocalDateTime.now());
+        history.setDateEnvoie(LocalDateTime.now());
         historyRepository.save(historyAdminStampService.stamp(history));
 
         // Update Mobile - Store ALL user IDs
@@ -231,17 +231,17 @@ public class MobileService {
         mobile.setDepartement(userDepartement);
         mobile.setStatus(Mobile.Status.active);
         mobile.setStatusAffectation(Mobile.StatusAffectation.affecter);
-        mobile.setDateEnvoie(LocalDate.now());
+        mobile.setDateEnvoie(LocalDateTime.now());
         repository.save(mobile);
 
         // Unified Sync with all IDs
         syncService.syncInventory("Mobile", mobile.getId(), mobile.getSn(), null,
                 null, mobile.getNom() + " " + mobile.getModel(), user, userAgence, userEntrepot, userDepartement,
-                "active", "affecter", mobile.getDateRecu(), LocalDate.now(), null, mobile.getDateCreation());
+                "active", "affecter", mobile.getDateRecu(), LocalDateTime.now(), null, mobile.getDateCreation());
 
         syncService.syncHistory("Mobile", mobile.getId(), mobile.getSn(), null, null,
                 mobile.getNom() + " " + mobile.getModel(), user, userAgence, userEntrepot, userDepartement,
-                event, LocalDate.now());
+                event, LocalDateTime.now());
 
         notificationService.notifyAdminAssetAssignment("Mobile", mobile.getNom() + " " + mobile.getModel(),
                 user.getId());
@@ -253,7 +253,7 @@ public class MobileService {
         Departement dept = departementRepository.findById(departementId).orElseThrow();
         String event = (mobile.getUser() == null && mobile.getDepartement() == null) ? "AFFECTATION" : "REAFFECTATION";
 
-        // Specific History — enriched
+        // Specific History â€” enriched
         HistoriqueMobile history = new HistoriqueMobile();
         history.setMateriel(mobile);
         history.setSN(mobile.getSn());
@@ -261,8 +261,8 @@ public class MobileService {
         history.setDepartmentNom(dept.getNom());
         history.setUserNom("SERVICE / DEPARTMENT");
         history.setStatusEvent(event);
-        history.setDateEvent(LocalDate.now());
-        history.setDateEnvoie(LocalDate.now());
+        history.setDateEvent(LocalDateTime.now());
+        history.setDateEnvoie(LocalDateTime.now());
         historyRepository.save(historyAdminStampService.stamp(history));
 
         // Update Mobile
@@ -272,17 +272,17 @@ public class MobileService {
         mobile.setDepartement(dept);
         mobile.setStatus(Mobile.Status.active);
         mobile.setStatusAffectation(Mobile.StatusAffectation.affecter);
-        mobile.setDateEnvoie(LocalDate.now());
+        mobile.setDateEnvoie(LocalDateTime.now());
         repository.save(mobile);
 
         // Unified Sync
         syncService.syncInventory("Mobile", mobile.getId(), mobile.getSn(), null,
                 null, mobile.getNom() + " " + mobile.getModel(), null, null, null, dept,
-                "active", "affecter", mobile.getDateRecu(), LocalDate.now(), null, mobile.getDateCreation());
+                "active", "affecter", mobile.getDateRecu(), LocalDateTime.now(), null, mobile.getDateCreation());
 
         syncService.syncHistory("Mobile", mobile.getId(), mobile.getSn(), null, null,
                 mobile.getNom() + " " + mobile.getModel(), null, null, null, dept,
-                event, LocalDate.now());
+                event, LocalDateTime.now());
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -325,14 +325,14 @@ public class MobileService {
             }
 
             history.setStatusEvent("DESAFFECTATION");
-            history.setDateEvent(LocalDate.now());
-            history.setDateRecu(LocalDate.now());
+            history.setDateEvent(LocalDateTime.now());
+            history.setDateRecu(LocalDateTime.now());
             historyRepository.save(historyAdminStampService.stamp(history));
 
             // Unified History Log
             syncService.syncHistory("Mobile", mobile.getId(), mobile.getSn(), null, null,
                     mobile.getNom() + " " + mobile.getModel(), user, agence, entrepot, dept,
-                    "DESAFFECTATION", LocalDate.now());
+                    "DESAFFECTATION", LocalDateTime.now());
 
             notificationService.notifyAdminAssetUnassignment("Mobile", mobile.getNom() + " " + mobile.getModel(),
                     user.getId());

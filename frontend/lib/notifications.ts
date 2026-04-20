@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import api from "@/lib/api"
 import { emitNotificationsRefresh, subscribeNotificationsRefresh } from "@/lib/notification-sync"
+import { formatDateTimeValue } from "@/lib/utils"
 
 export interface NotificationItem {
   id: number
@@ -137,17 +138,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 }
 
 export function formatNotificationTimestamp(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-  return date.toLocaleString("fr-FR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
+  return formatDateTimeValue(value, value)
 }
 
 export function buildNotificationDescription(notification: NotificationItem) {

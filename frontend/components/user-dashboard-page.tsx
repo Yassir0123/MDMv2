@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
+import { formatDateTimeValue } from "@/lib/utils"
 import {
   Mail, Calendar, Shield, Hash, BadgeCheck, Building2,
   CircuitBoard, Wifi, Package, Monitor, UserRound, Briefcase, Smartphone
@@ -224,7 +225,7 @@ export default function UserDashboardPage() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">Dernière date</p>
-                      <p className="text-xs font-medium text-foreground mt-1">{asset.dateRecu || asset.dateEnvoie || "—"}</p>
+                      <p className="text-xs font-medium text-foreground mt-1">{formatDateTimeValue(asset.dateRecu || asset.dateEnvoie, "-")}</p>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class HistoriqueMateriel implements AdminTrackedHistory, ManagerTrackedHistory {
@@ -51,10 +51,10 @@ public class HistoriqueMateriel implements AdminTrackedHistory, ManagerTrackedHi
 
     private String statusEvent;
 
-    private LocalDate dateEvent;
-    private LocalDate dateRecu;
-    private LocalDate dateEnvoie;
-    private LocalDate dateAnnuler;
+    private LocalDateTime dateEvent;
+    private LocalDateTime dateRecu;
+    private LocalDateTime dateEnvoie;
+    private LocalDateTime dateAnnuler;
 
     // Getters & Setters
     public Integer getId() {
@@ -246,35 +246,35 @@ public class HistoriqueMateriel implements AdminTrackedHistory, ManagerTrackedHi
         this.statusEvent = statusEvent;
     }
 
-    public LocalDate getDateEvent() {
+    public LocalDateTime getDateEvent() {
         return dateEvent;
     }
 
-    public void setDateEvent(LocalDate dateEvent) {
+    public void setDateEvent(LocalDateTime dateEvent) {
         this.dateEvent = dateEvent;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 }

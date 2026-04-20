@@ -1,6 +1,6 @@
 package com.web.mdm.Dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record DashboardSummaryDto(
@@ -8,7 +8,8 @@ public record DashboardSummaryDto(
         List<MobileSummaryDto> mobiles,
         List<CarteSimSummaryDto> sims,
         List<LigneInternetSummaryDto> internetLines,
-        List<MaterielSummaryDto> materiels) {
+        List<MaterielSummaryDto> materiels,
+        HelpdeskSummaryDto helpdesk) {
 
     public record AgencySummaryDto(Integer id, String nom) {
     }
@@ -36,7 +37,7 @@ public record DashboardSummaryDto(
             Integer userId,
             Integer departementId,
             Integer entrepotId,
-            LocalDate dateCreation) {
+            LocalDateTime dateCreation) {
     }
 
     public record CarteSimSummaryDto(
@@ -44,7 +45,7 @@ public record DashboardSummaryDto(
             String status,
             String statusAffectation,
             Integer agenceId,
-            LocalDate dateCreation) {
+            LocalDateTime dateCreation) {
     }
 
     public record LigneInternetSummaryDto(
@@ -52,7 +53,7 @@ public record DashboardSummaryDto(
             String status,
             String statusAffectation,
             Integer agenceId,
-            LocalDate dateCreation) {
+            LocalDateTime dateCreation) {
     }
 
     public record MaterielSummaryDto(
@@ -64,6 +65,37 @@ public record DashboardSummaryDto(
             Integer userId,
             Integer departementId,
             Integer entrepotId,
-            LocalDate dateCreation) {
+            LocalDateTime dateCreation) {
+    }
+
+    public record HelpdeskMetricDto(
+            String key,
+            String label,
+            long value) {
+    }
+
+    public record HelpdeskTrendPointDto(
+            String date,
+            String label,
+            long created,
+            long enAttente,
+            long enProgress,
+            long resolu,
+            long clos) {
+    }
+
+    public record HelpdeskSummaryDto(
+            long totalTickets,
+            long newTickets,
+            long pendingTickets,
+            long inProgressTickets,
+            long resolvedTickets,
+            long closedTickets,
+            long claimEvents,
+            long resolvedByCurrentUser,
+            List<HelpdeskMetricDto> overviewBreakdown,
+            List<HelpdeskMetricDto> importanceBreakdown,
+            List<HelpdeskMetricDto> impactBreakdown,
+            List<HelpdeskTrendPointDto> trend) {
     }
 }

@@ -10,6 +10,8 @@ import java.util.List;
 public interface HistoriqueAffectationRepository extends JpaRepository<HistoriqueAffectation, Integer> {
     List<HistoriqueAffectation> findByAgenceId(Integer agenceId);
 
+    List<HistoriqueAffectation> findByEntrepotId(Integer entrepotId);
+
     List<HistoriqueAffectation> findByDepartementId(Integer departementId);
 
     List<HistoriqueAffectation> findByUserIdOrderByIdDesc(Integer userId);

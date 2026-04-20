@@ -5,6 +5,7 @@ import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
   Link2, Unlink2, RefreshCw, Smartphone, Tablet,
@@ -244,9 +245,7 @@ export default function ManagerAssetsMobilePage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportHistory = async () => {
@@ -437,7 +436,7 @@ export default function ManagerAssetsMobilePage() {
                         <td className="px-4 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${h.action === 'CREATION' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{h.action}</span></td>
                         <td className="px-4 py-2 text-xs font-medium">{h.utilisateur}</td>
                         <td className="px-4 py-2 text-xs text-slate-500">{h.département}</td>
-                        <td className="px-4 py-2 text-xs font-mono text-slate-500">{new Date(h.date).toLocaleDateString("fr-FR")}</td>
+                        <td className="px-4 py-2 text-xs font-mono text-slate-500">{formatDateTimeValue(h.date, "-")}</td>
                       </tr>
                     ))}
                     {filteredHistory.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-slate-400">Vide</td></tr>}

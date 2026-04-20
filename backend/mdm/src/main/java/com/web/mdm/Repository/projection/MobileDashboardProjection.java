@@ -1,6 +1,6 @@
 package com.web.mdm.Repository.projection;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public interface MobileDashboardProjection {
     Integer getId();
@@ -19,5 +19,5 @@ public interface MobileDashboardProjection {
 
     Integer getEntrepotId();
 
-    LocalDate getDateCreation();
+    LocalDateTime getDateCreation();
 }

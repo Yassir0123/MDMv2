@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
   Edit2, Trash2, Plus, X, Search, RotateCw, Eye,
@@ -222,9 +223,7 @@ export default function ManagerAssetsInternetPage() {
   }
 
   const formatExportDate = (value?: string) => {
-    if (!value) return "-"
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+    return formatDateTimeValue(value, "-")
   }
 
   const handleExportHistory = async () => {
@@ -359,7 +358,7 @@ export default function ManagerAssetsInternetPage() {
                         <td className="px-4 py-3"><span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${entry.action === 'CREATION' ? 'bg-blue-50 text-blue-700' : entry.action === 'RESILIATION' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{entry.action}</span></td>
                         <td className={`${styles.td} font-medium text-slate-700`}>{entry.site}</td>
                         <td className={`${styles.td} font-medium text-slate-500`}>{entry.departement}</td>
-                        <td className={`${styles.td} text-right font-mono text-slate-500`}>{new Date(entry.date).toLocaleDateString("fr-FR")}</td>
+                        <td className={`${styles.td} text-right font-mono text-slate-500`}>{formatDateTimeValue(entry.date, "-")}</td>
                       </tr>
                     ))}
                     {filteredHistory.length === 0 && <tr><td colSpan={4} className="p-12 text-center text-slate-400 italic bg-slate-50/30">Aucun historique disponible</td></tr>}

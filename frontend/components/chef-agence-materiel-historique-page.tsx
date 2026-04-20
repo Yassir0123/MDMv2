@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import api from "@/lib/api"
 import { exportStyledWorkbook } from "@/lib/excel-export"
+import { formatDateTimeValue } from "@/lib/utils"
 import { useVisiblePolling } from "@/lib/use-visible-polling"
 import {
    Search, RotateCw, History,
@@ -294,9 +295,7 @@ export default function ChefAgenceMaterielHistoriquePage() {
    }
 
    const formatExportDate = (value?: string) => {
-      if (!value) return "-"
-      const date = new Date(value)
-      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR")
+      return formatDateTimeValue(value, "-")
    }
 
    const handleExport = async () => {
@@ -431,7 +430,7 @@ export default function ChefAgenceMaterielHistoriquePage() {
                               <td className="px-4 py-2">
                                  <div className="flex items-center gap-2 text-xs font-mono font-medium text-slate-600">
                                     <Calendar className="w-3 h-3 text-slate-400" />
-                                    {hist.dateEvent ? new Date(hist.dateEvent).toLocaleDateString("fr-FR") : "-"}
+                                    {formatDateTimeValue(hist.dateEvent, "-")}
                                  </div>
                               </td>
                               <td className="px-4 py-2">

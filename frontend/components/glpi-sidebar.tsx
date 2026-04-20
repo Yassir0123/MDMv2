@@ -258,27 +258,25 @@ export default function GLPISidebar({
               <NavItem icon={LayoutDashboard} label="Tableau de Bord" page="user-dashboard" currentPage={currentPage} onClick={handlePageClick} />
 
               <p className="px-3 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Matériel</p>
-              <NavGroup icon={Package} label="Matériel" menuKey="materiel" expanded={expandedMenus.has("materiel")} onToggle={toggleMenu}>
-                {isManager ? (
-                  <>
-                    <NavItem icon={UserCheck} label="Matériel Affecté" page="chef-agence-materiel-affecte" currentPage={currentPage} onClick={handlePageClick} indent />
-                    <NavItem icon={UserCheck} label="Matériel Collaborateurs" page="chef-agence-materiel-collaborateur" currentPage={currentPage} onClick={handlePageClick} indent />
-                    <NavItem icon={History} label="Historique" page="chef-agence-materiel-historique" currentPage={currentPage} onClick={handlePageClick} indent />
-                  </>
-                ) : (
-                  <NavItem icon={UserCheck} label="Affecter" page="chef-agence-materiel-affecte" currentPage={currentPage} onClick={handlePageClick} indent />
-                )}
-              </NavGroup>
-
-              {isHR && (
-                <div className="pt-4">
-                  <NavItem icon={Users} label="Collaborateurs RH" page="user-subordinates-hr" currentPage={currentPage} onClick={handlePageClick} />
-                </div>
+              {isManager ? (
+                <NavGroup icon={Package} label="Matériel" menuKey="materiel" expanded={expandedMenus.has("materiel")} onToggle={toggleMenu}>
+                  <NavItem icon={UserCheck} label="Matériel Affecté" page="chef-agence-materiel-affecte" currentPage={currentPage} onClick={handlePageClick} indent />
+                  <NavItem icon={UserCheck} label="Matériel Collaborateurs" page="chef-agence-materiel-collaborateur" currentPage={currentPage} onClick={handlePageClick} indent />
+                  <NavItem icon={History} label="Historique" page="chef-agence-materiel-historique" currentPage={currentPage} onClick={handlePageClick} indent />
+                </NavGroup>
+              ) : (
+                <NavItem icon={Package} label="Matériels" page="chef-agence-materiel-affecte" currentPage={currentPage} onClick={handlePageClick} />
               )}
 
-              <div className="pt-4">
-                <NavItem icon={LifeBuoy} label="Helpdesk" page="helpdesk-tickets" currentPage={currentPage} onClick={handlePageClick} />
-              </div>
+              {isHR && (
+                <>
+                  <p className="px-3 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Administration</p>
+                  <NavItem icon={Users} label="Collaborateurs RH" page="user-subordinates-hr" currentPage={currentPage} onClick={handlePageClick} />
+                </>
+              )}
+
+              <p className="px-3 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Support</p>
+              <NavItem icon={LifeBuoy} label="Helpdesk" page="helpdesk-tickets" currentPage={currentPage} onClick={handlePageClick} />
 
               {isManager && (
                 <>

@@ -4,7 +4,7 @@ import com.web.mdm.Models.*;
 import com.web.mdm.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class UserMaterielService {
@@ -45,7 +45,7 @@ public class UserMaterielService {
         Materiel mat = materielRepository.findById(materielId)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -161,7 +161,7 @@ public class UserMaterielService {
         Materiel mat = materielRepository.findById(materielId)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -279,7 +279,7 @@ public class UserMaterielService {
 
     public void retryAssignment(Integer materielId) {
         Materiel mat = materielRepository.findById(materielId).orElseThrow();
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -327,7 +327,7 @@ public class UserMaterielService {
     // Switches status from 'annuler' to 'non_affecter' and clears User association
     public void resetAssignment(Integer materielId) {
         Materiel mat = materielRepository.findById(materielId).orElseThrow();
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         String type = mat.getTypeMateriel();
         Integer specificId = mat.getSpecificId();
 
@@ -377,7 +377,7 @@ public class UserMaterielService {
     }
 
     // --- History Helpers (Simplified for brevity) ---
-    private void logSpecificHistory(Object entity, String event, LocalDate date) {
+    private void logSpecificHistory(Object entity, String event, LocalDateTime date) {
         if (entity instanceof Mobile) {
             Mobile m = (Mobile) entity;
             HistoriqueMobile h = new HistoriqueMobile();

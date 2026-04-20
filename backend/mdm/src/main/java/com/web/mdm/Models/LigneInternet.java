@@ -1,7 +1,7 @@
 package com.web.mdm.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -37,12 +37,12 @@ public class LigneInternet {
     @JoinColumn(name = "departement_id")
     private Departement departement; // Optional subdivision
 
-    private LocalDate dateEnvoie; // Assignment Date
-    private LocalDate dateRecu; // Creation Date (Legacy)
-    private LocalDate dateAnnuler; // Resignation Date
+    private LocalDateTime dateEnvoie; // Assignment Date
+    private LocalDateTime dateRecu; // Creation Date (Legacy)
+    private LocalDateTime dateAnnuler; // Resignation Date
 
     // <--- NEW: Added as requested
-    private LocalDate dateCreation;
+    private LocalDateTime dateCreation;
 
     @OneToMany(mappedBy = "materiel")
     @JsonIgnore
@@ -146,35 +146,35 @@ public class LigneInternet {
         this.departement = departement;
     }
 
-    public LocalDate getDateEnvoie() {
+    public LocalDateTime getDateEnvoie() {
         return dateEnvoie;
     }
 
-    public void setDateEnvoie(LocalDate dateEnvoie) {
+    public void setDateEnvoie(LocalDateTime dateEnvoie) {
         this.dateEnvoie = dateEnvoie;
     }
 
-    public LocalDate getDateRecu() {
+    public LocalDateTime getDateRecu() {
         return dateRecu;
     }
 
-    public void setDateRecu(LocalDate dateRecu) {
+    public void setDateRecu(LocalDateTime dateRecu) {
         this.dateRecu = dateRecu;
     }
 
-    public LocalDate getDateAnnuler() {
+    public LocalDateTime getDateAnnuler() {
         return dateAnnuler;
     }
 
-    public void setDateAnnuler(LocalDate dateAnnuler) {
+    public void setDateAnnuler(LocalDateTime dateAnnuler) {
         this.dateAnnuler = dateAnnuler;
     }
 
-    public LocalDate getDateCreation() {
+    public LocalDateTime getDateCreation() {
         return dateCreation;
     }
 
-    public void setDateCreation(LocalDate dateCreation) {
+    public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
     }
 

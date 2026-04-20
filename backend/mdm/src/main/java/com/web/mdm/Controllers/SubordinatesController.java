@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,7 +119,7 @@ public class SubordinatesController {
 
         // Update user status
         user.setStatus(Users.UserStatus.detacher);
-        user.setDateDetacher(LocalDate.now());
+        user.setDateDetacher(LocalDateTime.now());
         Users saved = usersRepository.save(user);
         notificationService.notifyManagementToAdmin("Dettacher", saved);
         return ResponseEntity.ok(saved);
@@ -147,7 +147,7 @@ public class SubordinatesController {
 
         // Update user status
         user.setStatus(Users.UserStatus.desactiver);
-        user.setDateDesactiver(LocalDate.now());
+        user.setDateDesactiver(LocalDateTime.now());
         Users saved = usersRepository.save(user);
         notificationService.notifyManagementToAdmin("Desactivation", saved);
         return ResponseEntity.ok(saved);
@@ -166,7 +166,7 @@ public class SubordinatesController {
         hist.setUserAddress(user.getAddress());
         hist.setUserStatus(user.getStatus() != null ? user.getStatus().name() : null);
         hist.setStatusEvent(statusEvent);
-        hist.setDateEvent(LocalDate.now());
+        hist.setDateEvent(LocalDateTime.now());
         hist.setMotif(motif);
         hist.setManagerId(managerId);
 

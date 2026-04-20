@@ -1,6 +1,6 @@
 package com.web.mdm.Dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class MobileDto {
     private Integer id;
@@ -25,8 +25,8 @@ public class MobileDto {
     private Integer departementId;
     private String departementNom;
     
-    private LocalDate dateEnvoie;
-    private LocalDate dateCreation;
+    private LocalDateTime dateEnvoie;
+    private LocalDateTime dateCreation;
 
     public MobileDto(Integer id, String sn, String imei, String nom, String marque, String model, 
                      String type, String status, String statusAffectation,
@@ -34,7 +34,7 @@ public class MobileDto {
                      Integer entrepotId, String entrepotNom,
                      Integer userId, String userNom,
                      Integer departementId, String departementNom,
-                     LocalDate dateEnvoie, LocalDate dateCreation) {
+                     LocalDateTime dateEnvoie, LocalDateTime dateCreation) {
         this.id = id;
         this.sn = sn;
         this.imei = imei;
@@ -74,6 +74,6 @@ public class MobileDto {
     public String getUserNom() { return userNom; }
     public Integer getDepartementId() { return departementId; }
     public String getDepartementNom() { return departementNom; }
-    public LocalDate getDateEnvoie() { return dateEnvoie; }
-    public LocalDate getDateCreation() { return dateCreation; }
+    public LocalDateTime getDateEnvoie() { return dateEnvoie; }
+    public LocalDateTime getDateCreation() { return dateCreation; }
 }
