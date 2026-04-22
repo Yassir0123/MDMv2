@@ -35,7 +35,7 @@ interface UserEntity {
    agence?: { id: number; nom?: string; email?: string; tel?: string }
    departement?: { id: number; nom?: string }
    entrepot?: { id: number; siteRef?: { libeller?: string } }
-   fonctionRef?: { id: number; libeller?: string }
+   fonctionRef?: { id: string; nom?: string }
 }
 
 interface MaterielItem {
@@ -510,78 +510,78 @@ export default function UserSubordinatesPageV2() {
             {/* Main Table */}
             <div className={styles.card}>
                <div className="overflow-x-auto">
-               <table className="w-full min-w-[860px]">
-                  <thead>
-                     <tr>
-                        <SortableTh label="Collaborateur" sortKey="nom" />
-                        <SortableTh label="Email" sortKey="email" />
-                        <SortableTh label="Statut" sortKey="status" />
-                        <th className={styles.th}>En Attente</th>
-                        <th className={styles.th}>Date Entrée</th>
-                        <th className={`${styles.th} text-right`}>Actions</th>
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                     {loading ? (
-                        <tr><td colSpan={6} className="p-12 text-center text-slate-400">Chargement...</td></tr>
-                     ) : paginated.length === 0 ? (
-                        <tr><td colSpan={6} className="p-12 text-center text-slate-400">
-                           <Search className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                           <p>Aucun collaborateur trouvé.</p>
-                        </td></tr>
-                     ) : paginated.map((sub) => {
-                        const pending = pendingByUser[sub.id] || []
-                        const pendingCount = pending.length
-                        return (
-                           <tr key={sub.id} className={`transition-colors group ${rowBg(sub.status)}`}>
-                              <td className={styles.td}>
-                                 <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isDesactive(sub.status) ? "bg-red-100 text-red-500" : isDetache(sub.status) ? "bg-orange-100 text-orange-600" : "bg-blue-50 text-blue-600"}`}>
-                                       {(sub.nom || "?").charAt(0).toUpperCase()}
+                  <table className="w-full min-w-[860px]">
+                     <thead>
+                        <tr>
+                           <SortableTh label="Collaborateur" sortKey="nom" />
+                           <SortableTh label="Email" sortKey="email" />
+                           <SortableTh label="Statut" sortKey="status" />
+                           <th className={styles.th}>En Attente</th>
+                           <th className={styles.th}>Date Entrée</th>
+                           <th className={`${styles.th} text-right`}>Actions</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100 bg-white">
+                        {loading ? (
+                           <tr><td colSpan={6} className="p-12 text-center text-slate-400">Chargement...</td></tr>
+                        ) : paginated.length === 0 ? (
+                           <tr><td colSpan={6} className="p-12 text-center text-slate-400">
+                              <Search className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                              <p>Aucun collaborateur trouvé.</p>
+                           </td></tr>
+                        ) : paginated.map((sub) => {
+                           const pending = pendingByUser[sub.id] || []
+                           const pendingCount = pending.length
+                           return (
+                              <tr key={sub.id} className={`transition-colors group ${rowBg(sub.status)}`}>
+                                 <td className={styles.td}>
+                                    <div className="flex items-center gap-3">
+                                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isDesactive(sub.status) ? "bg-red-100 text-red-500" : isDetache(sub.status) ? "bg-orange-100 text-orange-600" : "bg-blue-50 text-blue-600"}`}>
+                                          {(sub.nom || "?").charAt(0).toUpperCase()}
+                                       </div>
+                                       <div>
+                                          <p className={`font-bold text-xs ${isDesactive(sub.status) ? "text-red-900" : isDetache(sub.status) ? "text-orange-900" : "text-slate-800"}`}>
+                                             {sub.nom} {sub.prenom}
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 font-mono">{sub.matricule || "—"}</p>
+                                       </div>
                                     </div>
-                                    <div>
-                                       <p className={`font-bold text-xs ${isDesactive(sub.status) ? "text-red-900" : isDetache(sub.status) ? "text-orange-900" : "text-slate-800"}`}>
-                                          {sub.nom} {sub.prenom}
-                                       </p>
-                                       <p className="text-[10px] text-slate-400 font-mono">{sub.matricule || "—"}</p>
+                                 </td>
+                                 <td className={`${styles.td} text-slate-500`}>{sub.email || "—"}</td>
+                                 <td className={styles.td}>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusBadge(sub.status)}`}>
+                                       {statusLabel(sub.status)}
+                                    </span>
+                                 </td>
+                                 <td className={styles.td}>
+                                    {pendingCount > 0 && isActive(sub.status) ? (
+                                       <button onClick={() => openSidebar(sub)}
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse hover:bg-amber-100 transition-colors cursor-pointer shadow-sm">
+                                          <Package className="w-3.5 h-3.5" /> {pendingCount} élément(s)
+                                       </button>
+                                    ) : pendingCount > 0 ? (
+                                       <span className="text-xs text-amber-600 italic">{pendingCount} (non traité)</span>
+                                    ) : <span className="text-slate-400 text-xs italic">—</span>}
+                                 </td>
+                                 <td className={`${styles.td} font-mono text-slate-400 text-[11px]`}>
+                                    {formatDateTimeValue(sub.dateEmbauche, "-")}
+                                 </td>
+                                 <td className="px-3 py-2.5 text-right">
+                                    <div className="flex justify-end gap-1">
+                                       <button onClick={() => openViewingUser(sub)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Voir détails"><Eye className="w-4 h-4" /></button>
+                                       {isActive(sub.status) && (
+                                          <>
+                                             <button onClick={() => setDetachingUser(sub)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="Détacher"><UserMinus className="w-4 h-4" /></button>
+                                             <button onClick={() => setDeactivatingUser(sub)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><UserX className="w-4 h-4" /></button>
+                                          </>
+                                       )}
                                     </div>
-                                 </div>
-                              </td>
-                              <td className={`${styles.td} text-slate-500`}>{sub.email || "—"}</td>
-                              <td className={styles.td}>
-                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusBadge(sub.status)}`}>
-                                    {statusLabel(sub.status)}
-                                 </span>
-                              </td>
-                              <td className={styles.td}>
-                                 {pendingCount > 0 && isActive(sub.status) ? (
-                                    <button onClick={() => openSidebar(sub)}
-                                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse hover:bg-amber-100 transition-colors cursor-pointer shadow-sm">
-                                       <Package className="w-3.5 h-3.5" /> {pendingCount} élément(s)
-                                    </button>
-                                 ) : pendingCount > 0 ? (
-                                    <span className="text-xs text-amber-600 italic">{pendingCount} (non traité)</span>
-                                 ) : <span className="text-slate-400 text-xs italic">—</span>}
-                              </td>
-                              <td className={`${styles.td} font-mono text-slate-400 text-[11px]`}>
-                                 {formatDateTimeValue(sub.dateEmbauche, "-")}
-                              </td>
-                              <td className="px-3 py-2.5 text-right">
-                                 <div className="flex justify-end gap-1">
-                                    <button onClick={() => openViewingUser(sub)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Voir détails"><Eye className="w-4 h-4" /></button>
-                                    {isActive(sub.status) && (
-                                       <>
-                                          <button onClick={() => setDetachingUser(sub)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="Détacher"><UserMinus className="w-4 h-4" /></button>
-                                          <button onClick={() => setDeactivatingUser(sub)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><UserX className="w-4 h-4" /></button>
-                                       </>
-                                    )}
-                                 </div>
-                              </td>
-                           </tr>
-                        )
-                     })}
-                  </tbody>
-               </table>
+                                 </td>
+                              </tr>
+                           )
+                        })}
+                     </tbody>
+                  </table>
                </div>
                {totalPages > 1 && <Pagination current={page} total={totalPages} setPage={setPage} />}
             </div>
@@ -645,7 +645,7 @@ export default function UserSubordinatesPageV2() {
          {/* ── MODAL: Accuser Réception ─────────────────────────── */}
          {confirmingItem && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-gradient-to-r from-sidebar-primary to-accent p-5 flex items-center justify-between">
                      <h2 className="text-base font-bold text-white flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Confirmation de Réception</h2>
                      <button onClick={() => setConfirmingItem(null)} className="text-slate-300 hover:text-white"><X className="w-4 h-4" /></button>
@@ -670,7 +670,7 @@ export default function UserSubordinatesPageV2() {
          {/* ── MODAL: Annuler Affectation (style chef-agence) ──────────── */}
          {cancelingItem && sidebarUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-               <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
                      <h2 className="text-base font-bold text-red-900 flex items-center gap-2"><ShieldAlert className="w-5 h-5" /> Signaler un Incident</h2>
                      <button onClick={() => { setCancelingItem(null); setCancelReason(""); setCancelCommentaire("") }} className="text-red-400 hover:text-red-700"><X className="w-5 h-5" /></button>
@@ -706,7 +706,7 @@ export default function UserSubordinatesPageV2() {
          {/* ── MODAL: Voir Détail ────────────────────────────────── */}
          {viewingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
                      <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                         <div className="p-1.5 bg-blue-50 rounded-lg"><UserCircle2 className="w-4 h-4 text-blue-600" /></div>
@@ -732,14 +732,14 @@ export default function UserSubordinatesPageV2() {
                         <div className="grid grid-cols-2 gap-4">
                            <div><label className={styles.label}>Nom Complet</label><p className="text-sm font-bold text-slate-800 mt-1">{viewingUser.nom} {viewingUser.prenom}</p></div>
                            <div><label className={styles.label}>Matricule</label><p className="text-sm font-mono font-bold text-slate-700 mt-1">{viewingUser.matricule || "—"}</p></div>
-                           <div><label className={styles.label}>Email</label><p className="text-sm text-slate-600 mt-1">{viewingUser.email || "—"}</p></div>
-                           <div><label className={styles.label}>Téléphone</label><p className="text-sm text-slate-600 mt-1">{viewingUser.tel || "—"}</p></div>
+                           <div><label className={styles.label}>Email</label><p className="text-sm font-bold text-slate-800 mt-1">{viewingUser.email || "—"}</p></div>
+                           <div><label className={styles.label}>Téléphone</label><p className="text-sm font-bold text-slate-800 mt-1">{viewingUser.tel || "—"}</p></div>
                            <div><label className={styles.label}>Statut</label>
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusBadge(viewingUser.status)}`}>
                                  {statusLabel(viewingUser.status)}
                               </span>
                            </div>
-                           <div><label className={styles.label}>Fonction</label><p className="text-sm text-slate-600 mt-1">{viewingUser.fonctionRef?.libeller || "—"}</p></div>
+                           <div><label className={styles.label}>Fonction</label><p className="text-sm font-bold text-slate-800 mt-1">{viewingUser.fonctionRef?.nom || "—"}</p></div>
                            <div className="col-span-2 border-t border-slate-100 pt-3 mt-1">
                               <p className="text-[10px] font-bold uppercase text-slate-400 mb-2">Affectations</p>
                               <div className="grid grid-cols-3 gap-3">
@@ -798,7 +798,7 @@ export default function UserSubordinatesPageV2() {
          {/* ── MODAL: Détacher ───────────────────────────────────── */}
          {detachingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-orange-50 px-5 py-4 flex items-center gap-3 border-b border-orange-100">
                      <div className="p-1.5 bg-white rounded-full text-orange-600 shadow-sm"><UserMinus className="w-4 h-4" /></div>
                      <h2 className="text-base font-bold text-orange-900">Détachement</h2>
@@ -818,7 +818,7 @@ export default function UserSubordinatesPageV2() {
          {/* ── MODAL: Désactiver ─────────────────────────────────── */}
          {deactivatingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-red-50 px-5 py-4 flex items-center gap-3 border-b border-red-100">
                      <div className="p-1.5 bg-white rounded-full text-red-600 shadow-sm"><UserX className="w-4 h-4" /></div>
                      <h2 className="text-base font-bold text-red-900">Désactivation</h2>

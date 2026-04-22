@@ -242,6 +242,7 @@ export default function GLPISidebar({
                     <NavItem icon={Users2} label="Liste Utilisateurs" page="users-list" currentPage={currentPage} onClick={handlePageClick} indent />
                     <NavItem icon={Users} label="Employés" page="admin-employes" currentPage={currentPage} onClick={handlePageClick} indent />
                     <NavItem icon={Building2} label="Gestion Agences" page="admin-agence" currentPage={currentPage} onClick={handlePageClick} indent />
+                    <NavItem icon={Package} label="Gestion Entrepots" page="admin-entrepot" currentPage={currentPage} onClick={handlePageClick} indent />
                     <NavItem icon={Building2} label="Départements" page="admin-departments" currentPage={currentPage} onClick={handlePageClick} indent />
                     <NavItem icon={UserMinus} label="Utilisateurs désactivés" page="users" currentPage={currentPage} onClick={handlePageClick} indent />
                   </>

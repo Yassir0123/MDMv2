@@ -1,4 +1,4 @@
-﻿
+
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -244,7 +244,7 @@ export default function EmployesPage() {
     fetchUsers()
   }, [])
 
-  useVisiblePolling(() => fetchUsers(), 4000, [])
+  useVisiblePolling(() => fetchUsers(), 30000, [])
 
   const fetchUsers = async () => {
     const shouldShowLoading = !hasLoadedUsersRef.current
@@ -545,9 +545,17 @@ export default function EmployesPage() {
                       <span className="text-xs font-medium text-slate-500">Matricule</span>
                       <span className="font-mono text-xs font-semibold text-slate-700">{selectedUser.matricule || "—"}</span>
                     </div>
-                    <div className="flex justify-between py-1.5">
+                    <div className="flex justify-between py-1.5 border-b border-slate-50">
                       <span className="text-xs font-medium text-slate-500">CIN</span>
                       <span className="font-mono text-xs font-semibold text-slate-700">{selectedUser.cin || "—"}</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-slate-50">
+                      <span className="text-xs font-medium text-slate-500">Téléphone</span>
+                      <span className="font-mono text-xs font-medium text-slate-600">{selectedUser.tel || "—"}</span>
+                    </div>
+                    <div className="flex justify-between py-1.5">
+                      <span className="text-xs font-medium text-slate-500">Fonction</span>
+                      <span className="text-xs font-medium text-slate-700">{selectedUser.fonctionRef?.nom || selectedUser.fonctionRef?.libeller || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -631,7 +639,7 @@ export default function EmployesPage() {
                     <History className="w-4 h-4 text-blue-600" />
                     <h3 className="font-semibold text-slate-700 text-xs uppercase">Historique</h3>
                   </div>
-                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={handleExportUserHistory}
                       disabled={isExportingHistory || (histAffFiltered.length === 0 && histMatFiltered.length === 0)}
@@ -651,12 +659,12 @@ export default function EmployesPage() {
                       className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg border transition-all ${histTab === "materiel" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
                     >
                       Matériel
-                  </button>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="overflow-x-auto">
-                {histTab === "affectation" ? (
-                  <table className="w-full text-left border-collapse min-w-[700px]">
+                <div className="overflow-x-auto">
+                  {histTab === "affectation" ? (
+                    <table className="w-full text-left border-collapse min-w-[700px]">
                       <thead>
                         <tr>
                           <th className={styles.th}>Action</th>

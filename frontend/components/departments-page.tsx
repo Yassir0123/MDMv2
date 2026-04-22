@@ -559,7 +559,7 @@ export default function AdminDepartmentsPage() {
                            <User className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                         <div className="p-4">
-                           {selectedDept.chefDepartementNom && selectedDept.chefDepartementNom !== "Non Assigné" ? (
+                           {selectedDept.chefDepartementNom && !selectedDept.chefDepartementNom.startsWith("Non Assign") ? (
                               <div className="flex items-center gap-3">
                                  <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-sm border border-blue-200">
                                     {selectedDept.chefDepartementNom.charAt(0).toUpperCase()}
@@ -786,9 +786,9 @@ export default function AdminDepartmentsPage() {
                            <td className={styles.td}>
                               <div className="flex items-center gap-2">
                                  <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                                    {dept.chefDepartementNom ? dept.chefDepartementNom.charAt(0) : "?"}
+                                    {dept.chefDepartementNom && !dept.chefDepartementNom.startsWith("Non Assign") ? dept.chefDepartementNom.charAt(0) : "?"}
                                  </div>
-                                 <span className="text-xs font-medium text-slate-600">{dept.chefDepartementNom || "Non assigné"}</span>
+                                 <span className="text-xs font-medium text-slate-600">{dept.chefDepartementNom && !dept.chefDepartementNom.startsWith("Non Assign") ? dept.chefDepartementNom : "Non assigné"}</span>
                               </div>
                            </td>
                            <td className={styles.td}>

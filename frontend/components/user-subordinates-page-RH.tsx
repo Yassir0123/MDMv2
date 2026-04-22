@@ -649,7 +649,7 @@ export default function UserSubordinatesPageRH() {
          {/* ── MODAL: Accuser Réception ─────────────────────────── */}
          {confirmingItem && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-gradient-to-r from-sidebar-primary to-accent p-5 flex items-center justify-between">
                      <h2 className="text-base font-bold text-white flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Confirmation de Réception</h2>
                      <button onClick={() => setConfirmingItem(null)} className="text-slate-300 hover:text-white"><X className="w-4 h-4" /></button>
@@ -674,7 +674,7 @@ export default function UserSubordinatesPageRH() {
          {/* ── MODAL: Annuler Affectation (style chef-agence) ──────────── */}
          {cancelingItem && sidebarUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-               <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
                      <h2 className="text-base font-bold text-red-900 flex items-center gap-2"><ShieldAlert className="w-5 h-5" /> Signaler un Incident</h2>
                      <button onClick={() => { setCancelingItem(null); setCancelReason(""); setCancelCommentaire("") }} className="text-red-400 hover:text-red-700"><X className="w-5 h-5" /></button>
@@ -710,7 +710,7 @@ export default function UserSubordinatesPageRH() {
          {/* ── MODAL: Voir Détail ────────────────────────────────── */}
          {viewingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
                      <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                         <div className="p-1.5 bg-blue-50 rounded-lg"><UserCircle2 className="w-4 h-4 text-blue-600" /></div>
@@ -802,7 +802,7 @@ export default function UserSubordinatesPageRH() {
          {/* ── MODAL: Détacher ───────────────────────────────────── */}
          {detachingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-orange-50 px-5 py-4 flex items-center gap-3 border-b border-orange-100">
                      <div className="p-1.5 bg-white rounded-full text-orange-600 shadow-sm"><UserMinus className="w-4 h-4" /></div>
                      <h2 className="text-base font-bold text-orange-900">Détachement</h2>
@@ -822,7 +822,7 @@ export default function UserSubordinatesPageRH() {
          {/* ── MODAL: Désactiver ─────────────────────────────────── */}
          {deactivatingUser && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 translate-x-30">
                   <div className="bg-red-50 px-5 py-4 flex items-center gap-3 border-b border-red-100">
                      <div className="p-1.5 bg-white rounded-full text-red-600 shadow-sm"><UserX className="w-4 h-4" /></div>
                      <h2 className="text-base font-bold text-red-900">Désactivation</h2>

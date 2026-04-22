@@ -78,6 +78,7 @@ export default function UsersManagementPage() {
 
    const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
    const [users, setUsers] = useState<UserData[]>([])
+   const [allUsers, setAllUsers] = useState<UserData[]>([])
    const [departements, setDepartements] = useState<{ id: number, nom: string }[]>([])
    const [agences, setAgences] = useState<{ id: number, nom: string }[]>([])
    const [entrepots, setEntrepots] = useState<EntrepotOption[]>([])
@@ -104,7 +105,7 @@ export default function UsersManagementPage() {
 
    useVisiblePolling(() => {
       void fetchUsers({ silent: true })
-   }, 4000, [])
+   }, 10000, [])
 
    const fetchUsers = async ({ silent = false }: { silent?: boolean } = {}) => {
       try {
@@ -123,14 +124,16 @@ export default function UsersManagementPage() {
 
    const fetchOptions = async () => {
       try {
-         const [dRes, aRes, eRes] = await Promise.all([
+         const [dRes, aRes, eRes, uRes] = await Promise.all([
             api.get("/departements"),
             api.get("/agences"),
-            api.get("/entrepots")
+            api.get("/entrepots"),
+            api.get("/users")
          ])
          setDepartements(dRes.data)
          setAgences(aRes.data)
          setEntrepots(eRes.data)
+         setAllUsers(Array.isArray(uRes.data) ? uRes.data : [])
       } catch (err) { console.error("Failed to fetch options", err) }
    }
 
@@ -217,7 +220,6 @@ export default function UsersManagementPage() {
       try {
          const res = await api.post(`/users/${userId}/desactiver`)
          setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
-         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
       setShowDeactivateModal(null)
    }
@@ -227,7 +229,6 @@ export default function UsersManagementPage() {
       try {
          const res = await api.put(`/users/${userId}/activer`)
          setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
-         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
    }
 
@@ -242,7 +243,6 @@ export default function UsersManagementPage() {
             managerId: selectedChief !== "" ? Number(selectedChief) : null
          })
          setUsers((prev) => prev.map((user) => user.id === userId ? { ...user, ...res.data } : user))
-         void fetchUsers({ silent: true })
       } catch (err) { console.error(err) }
       setShowReaffectModal(null)
       setReaffectDepartementId(-1)
@@ -380,97 +380,97 @@ export default function UsersManagementPage() {
             {/* Table */}
             <div className={styles.card}>
                <div className="overflow-x-auto">
-               <table className="w-full min-w-[980px]">
-                  <thead>
-                     <tr>
-                        {[{ id: 'nom', label: 'Collaborateur' }, { id: 'agence', label: 'Agence' }, { id: 'entrepot', label: 'Entrepôt' }, { id: 'departement', label: 'Département' }, { id: 'manager', label: 'Manager' }, { id: 'statut', label: 'Statut' }].map((col) => (
-                           <th key={col.id} className={`${styles.th} cursor-pointer hover:bg-slate-100 hover:text-emerald-600 transition-colors group`} onClick={() => handleSortClick(col.id)}>
-                              <div className="flex items-center gap-2">
-                                 {col.label} {sortBy === col.id ? (sortOrder === "asc" ? <ChevronUp className="w-3 h-3 text-emerald-600" /> : <ChevronDown className="w-3 h-3 text-emerald-600" />) : <ArrowUpDown className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100" />}
-                              </div>
-                           </th>
-                        ))}
-                        <th className={`${styles.th} text-right`}>Actions</th>
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                     {paginatedUsers.map((user) => {
-                        const manager = user.managerId ? users.find(u => u.id === user.managerId) : null;
-                        const status = normalizeStatus(user.status);
+                  <table className="w-full min-w-[980px]">
+                     <thead>
+                        <tr>
+                           {[{ id: 'nom', label: 'Collaborateur' }, { id: 'agence', label: 'Agence' }, { id: 'entrepot', label: 'Entrepôt' }, { id: 'departement', label: 'Département' }, { id: 'manager', label: 'Manager' }, { id: 'statut', label: 'Statut' }].map((col) => (
+                              <th key={col.id} className={`${styles.th} cursor-pointer hover:bg-slate-100 hover:text-emerald-600 transition-colors group`} onClick={() => handleSortClick(col.id)}>
+                                 <div className="flex items-center gap-2">
+                                    {col.label} {sortBy === col.id ? (sortOrder === "asc" ? <ChevronUp className="w-3 h-3 text-emerald-600" /> : <ChevronDown className="w-3 h-3 text-emerald-600" />) : <ArrowUpDown className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100" />}
+                                 </div>
+                              </th>
+                           ))}
+                           <th className={`${styles.th} text-right`}>Actions</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100 bg-white">
+                        {paginatedUsers.map((user) => {
+                           const manager = user.managerId ? allUsers.find(u => u.id === user.managerId) : null;
+                           const status = normalizeStatus(user.status);
 
-                        return (
-                           <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                              <td className={styles.td}>
-                                 <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors font-bold text-[10px] uppercase">
-                                       {(user.nom || "?").charAt(0)}
+                           return (
+                              <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
+                                 <td className={styles.td}>
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors font-bold text-[10px] uppercase">
+                                          {(user.nom || "?").charAt(0)}
+                                       </div>
+                                       <div>
+                                          <p className="font-bold text-slate-700 text-xs">{user.nom} {user.prenom}</p>
+                                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Matricule: {user.matricule || "—"}</p>
+                                       </div>
                                     </div>
-                                    <div>
-                                       <p className="font-bold text-slate-700 text-xs">{user.nom} {user.prenom}</p>
-                                       <p className="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Matricule: {user.matricule || "—"}</p>
-                                    </div>
-                                 </div>
-                              </td>
-                              <td className={styles.td}>
-                                 <p className="font-medium text-slate-700 text-xs">{user.agence?.nom || "—"}</p>
-                              </td>
-                              <td className={styles.td}>
-                                 <p className="font-medium text-slate-700 text-xs">{user.entrepot?.siteRef?.libeller || "—"}</p>
-                              </td>
-                              <td className={styles.td}>
-                                 <p className="font-medium text-slate-700 text-xs">{user.departement?.nom || "—"}</p>
-                              </td>
-                              <td className={styles.td}>
-                                 {manager ? (
-                                    <div>
-                                       <p className="font-bold text-slate-700 text-xs">{manager.nom} {manager.prenom}</p>
-                                       <p className="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Matricule: {manager.matricule || "—"}</p>
-                                    </div>
-                                 ) : (
-                                    <span className="text-slate-400 text-xs">—</span>
-                                 )}
-                              </td>
-                              <td className={styles.td}>
-                                 {status === "detacher" ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-600 border border-orange-100">
-                                       <UserMinus className="w-3 h-3" /> Détaché
-                                    </span>
-                                 ) : status === "desactiver" ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
-                                       <UserX className="w-3 h-3" /> Désactivé
-                                    </span>
-                                 ) : status === "archived" ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
-                                       <Trash2 className="w-3 h-3" /> Archivé
-                                    </span>
-                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                       <UserCheck className="w-3 h-3" /> Actif
-                                    </span>
-                                 )}
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                 <div className="flex justify-end gap-1">
-                                    <button onClick={() => setSelectedUserId(user.id)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Détails"><MoreHorizontal className="w-4 h-4" /></button>
-                                    {status === "detacher" && (
-                                       <>
-                                          <button onClick={() => setShowReaffectModal(user.id)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="Réaffecter"><RotateCw className="w-4 h-4" /></button>
-                                          <button onClick={() => setShowDeactivateModal(user.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><Trash2 className="w-4 h-4" /></button>
-                                       </>
+                                 </td>
+                                 <td className={styles.td}>
+                                    <p className="font-medium text-slate-700 text-xs">{user.agence?.nom || "—"}</p>
+                                 </td>
+                                 <td className={styles.td}>
+                                    <p className="font-medium text-slate-700 text-xs">{user.entrepot?.siteRef?.libeller || "—"}</p>
+                                 </td>
+                                 <td className={styles.td}>
+                                    <p className="font-medium text-slate-700 text-xs">{user.departement?.nom || "—"}</p>
+                                 </td>
+                                 <td className={styles.td}>
+                                    {manager ? (
+                                       <div>
+                                          <p className="font-bold text-slate-700 text-xs">{manager.nom} {manager.prenom}</p>
+                                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Matricule: {manager.matricule || "—"}</p>
+                                       </div>
+                                    ) : (
+                                       <span className="text-slate-400 text-xs">—</span>
                                     )}
-                                    {(status === "desactiver" || status === "archived") && (
-                                       <>
-                                          {status !== "archived" && <button onClick={() => setShowDeactivateModal(user.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><Trash2 className="w-4 h-4" /></button>}
-                                          <button onClick={() => handleActiverUser(user.id)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Réactiver"><RotateCw className="w-4 h-4" /></button>
-                                       </>
+                                 </td>
+                                 <td className={styles.td}>
+                                    {status === "detacher" ? (
+                                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-600 border border-orange-100">
+                                          <UserMinus className="w-3 h-3" /> Détaché
+                                       </span>
+                                    ) : status === "desactiver" ? (
+                                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
+                                          <UserX className="w-3 h-3" /> Désactivé
+                                       </span>
+                                    ) : status === "archived" ? (
+                                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                                          <Trash2 className="w-3 h-3" /> Archivé
+                                       </span>
+                                    ) : (
+                                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                          <UserCheck className="w-3 h-3" /> Actif
+                                       </span>
                                     )}
-                                 </div>
-                              </td>
-                           </tr>
-                        )
-                     })}
-                  </tbody>
-               </table>
+                                 </td>
+                                 <td className="px-6 py-4 text-right">
+                                    <div className="flex justify-end gap-1">
+                                       <button onClick={() => setSelectedUserId(user.id)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Détails"><MoreHorizontal className="w-4 h-4" /></button>
+                                       {status === "detacher" && (
+                                          <>
+                                             <button onClick={() => setShowReaffectModal(user.id)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="Réaffecter"><RotateCw className="w-4 h-4" /></button>
+                                             <button onClick={() => setShowDeactivateModal(user.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><Trash2 className="w-4 h-4" /></button>
+                                          </>
+                                       )}
+                                       {(status === "desactiver" || status === "archived") && (
+                                          <>
+                                             {status !== "archived" && <button onClick={() => setShowDeactivateModal(user.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Désactiver"><Trash2 className="w-4 h-4" /></button>}
+                                             <button onClick={() => handleActiverUser(user.id)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Réactiver"><RotateCw className="w-4 h-4" /></button>
+                                          </>
+                                       )}
+                                    </div>
+                                 </td>
+                              </tr>
+                           )
+                        })}
+                     </tbody>
+                  </table>
                </div>
                {isLoading && <div className="p-12 text-center text-slate-400">Chargement...</div>}
                {!isLoading && totalPages > 1 && <Pagination current={page} total={totalPages} setPage={setPage} />}
@@ -511,18 +511,18 @@ export default function UsersManagementPage() {
                         const user = users.find(u => u.id === showReaffectModal)
                         if (!user) return null
 
-                        const oldManager = user.managerId ? users.find(u => u.id === user.managerId) : null;
+                        const oldManager = user.managerId ? allUsers.find(u => u.id === user.managerId) : null;
                         const oldMainOrg = user.departement?.nom || user.agence?.nom || user.entrepot?.siteRef?.libeller || "N/A";
                         const oldOrgType = user.departement ? "Département" : (user.agence ? "Agence" : (user.entrepot ? "Entrepôt" : "Aucun"));
 
-                        const potentialManagers = users.filter((u) => {
+                        const potentialManagers = allUsers.filter((u) => {
                            if (u.id === showReaffectModal) return false
                            if ((u.status || "").toLowerCase() === "archived") return false
                            if (u.isManager !== 1) return false
 
-                           const targetDepartementId = reaffectDepartementId !== "" ? Number(reaffectDepartementId) : null;
-                           const targetAgenceId = reaffectAgenceId !== "" ? Number(reaffectAgenceId) : null;
-                           const targetEntrepotId = reaffectEntrepotId !== "" ? Number(reaffectEntrepotId) : null;
+                           const targetDepartementId = (reaffectUpdateOrg && reaffectDepartementId !== "" && reaffectDepartementId !== -1) ? Number(reaffectDepartementId) : null;
+                           const targetAgenceId = (reaffectUpdateOrg && reaffectAgenceId !== "" && reaffectAgenceId !== -1) ? Number(reaffectAgenceId) : null;
+                           const targetEntrepotId = (reaffectUpdateOrg && reaffectEntrepotId !== "" && reaffectEntrepotId !== -1) ? Number(reaffectEntrepotId) : null;
 
                            if (targetDepartementId && u.departement?.id === targetDepartementId) return true;
                            if (targetAgenceId && u.agence?.id === targetAgenceId) return true;
@@ -689,7 +689,7 @@ export default function UsersManagementPage() {
             selectedUserId && (
                <UserDetailModal
                   userId={selectedUserId}
-                  users={users}
+                  users={allUsers.length > 0 ? allUsers : users}
                   onClose={() => setSelectedUserId(null)}
                />
             )

@@ -60,6 +60,7 @@ public class EntrepotController {
 
         return new EntrepotDto(
                 entrepot.getId(),
+                entrepot.getNom(),
                 site != null ? site.getId() : null,
                 site != null ? site.getLibeller() : "Non assigne",
                 entrepot.getTelephone(),
@@ -74,6 +75,7 @@ public class EntrepotController {
     }
 
     private ResponseEntity<?> saveOrUpdate(Entrepot entrepot, EntrepotDto dto, Integer previousChefId) {
+        entrepot.setNom(dto.getNom());
         entrepot.setTelephone(dto.getTelephone());
         entrepot.setEmail(dto.getEmail());
         entrepot.setFax(dto.getFax());

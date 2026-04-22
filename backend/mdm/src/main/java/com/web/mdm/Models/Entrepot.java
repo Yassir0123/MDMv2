@@ -17,6 +17,8 @@ public class Entrepot {
     @JoinColumn(name = "site_id", unique = true)
     private Site siteRef;
 
+    private String nom;
+
     private String telephone;
     private String email;
     private String fax;
@@ -34,6 +36,9 @@ public class Entrepot {
 
     public Site getSiteRef() { return siteRef; }
     public void setSiteRef(Site siteRef) { this.siteRef = siteRef; }
+
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }

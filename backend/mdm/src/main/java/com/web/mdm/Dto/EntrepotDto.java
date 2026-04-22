@@ -2,6 +2,7 @@ package com.web.mdm.Dto;
 
 public class EntrepotDto {
     private Integer id;
+    private String nom;
     private Integer siteId;
     private String siteNom;
     private String telephone;
@@ -15,9 +16,10 @@ public class EntrepotDto {
     public EntrepotDto() {
     }
 
-    public EntrepotDto(Integer id, Integer siteId, String siteNom, String telephone, String email, String fax,
+    public EntrepotDto(Integer id, String nom, Integer siteId, String siteNom, String telephone, String email, String fax,
             Integer chefEntrepotId, String chefEntrepotNom, Integer totalEffectif, Integer totalSites) {
         this.id = id;
+        this.nom = nom;
         this.siteId = siteId;
         this.siteNom = siteNom;
         this.telephone = telephone;
@@ -35,6 +37,14 @@ public class EntrepotDto {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
     }
 
     public Integer getSiteId() {

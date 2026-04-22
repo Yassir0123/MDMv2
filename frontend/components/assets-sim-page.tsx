@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
@@ -1106,7 +1106,7 @@ export default function AssetsSIMPage() {
       {/* ADD/EDIT FORM MODAL */}
       {
         (viewMode === "add" || viewMode === "edit") && isWritable && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 translate-x-30">
             <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh] translate-x-[8vw] translate-y-[vh]">
               <div className="flex justify-between items-center px-5 py-3 border-b border-slate-100">
                 <h2 className="text-lg font-bold text-slate-900">{viewMode === "add" ? "Nouvelle Carte SIM" : "Modifier la Carte"}</h2>

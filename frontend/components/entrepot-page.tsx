@@ -29,6 +29,7 @@ interface FilterRule {
 interface Entrepot {
   id: number
   siteId?: number
+  nom?: string
   siteNom: string
   email?: string
   telephone?: string
@@ -308,6 +309,7 @@ export default function EntrepotPage() {
   // --- FILTER/SORT LOGIC ---
   const getFieldValue = (entrepot: Entrepot, attribute: string): string => {
     switch (attribute) {
+      case 'nom': return entrepot.nom || ""
       case 'siteNom': return entrepot.siteNom || ""
       case 'telephone': return entrepot.telephone || ""
       case 'fax': return entrepot.fax || ""
@@ -456,6 +458,7 @@ export default function EntrepotPage() {
   const handleSave = async () => {
     try {
       const payload = {
+        nom: formData.nom,
         siteId: formData.siteId,
         email: formData.email,
         telephone: formData.telephone,
@@ -539,7 +542,7 @@ export default function EntrepotPage() {
                   </div>
                 </div>
                 <div className="pt-8 px-4 pb-4">
-                  <h1 className="text-lg font-bold text-slate-900 tracking-tight">{selectedEntrepot.siteNom || `Entrepot #${selectedEntrepot.id}`}</h1>
+                  <h1 className="text-lg font-bold text-slate-900 tracking-tight">{selectedEntrepot.nom || selectedEntrepot.siteNom || `Entrepot #${selectedEntrepot.id}`}</h1>
                   {selectedEntrepot.siteNom && (
                     <div className="flex items-center gap-1 mt-0.5 mb-4">
                       <MapPin className="w-3 h-3 text-slate-400" />
@@ -766,6 +769,7 @@ export default function EntrepotPage() {
           filters={filters}
           setFilters={(newFilters: FilterRule[]) => { setFilters(newFilters); setPage(1) }}
           attributes={[
+            { value: "nom", label: "Nom" },
             { value: "siteNom", label: "Site" },
             { value: "telephone", label: "Téléphone" },
             { value: "fax", label: "Fax" },
@@ -781,6 +785,7 @@ export default function EntrepotPage() {
             <thead>
               <tr>
                 <th className={styles.th}>ID</th>
+                <SortableTh label="Nom" sortKey="nom" by={sortBy} order={sortOrder} onClick={handleSortClick} />
                 <SortableTh label="Site" sortKey="siteNom" by={sortBy} order={sortOrder} onClick={handleSortClick} />
                 <SortableTh label="Téléphone" sortKey="telephone" by={sortBy} order={sortOrder} onClick={handleSortClick} />
                 <SortableTh label="Fax" sortKey="fax" by={sortBy} order={sortOrder} onClick={handleSortClick} />
@@ -791,9 +796,9 @@ export default function EntrepotPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {loading ? (
-                <tr><td colSpan={7} className="p-12 text-center text-slate-400">Chargement...</td></tr>
+                <tr><td colSpan={8} className="p-12 text-center text-slate-400">Chargement...</td></tr>
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={7} className="p-12 text-center text-slate-400">Aucun entrepot trouvé</td></tr>
+                <tr><td colSpan={8} className="p-12 text-center text-slate-400">Aucun entrepot trouvé</td></tr>
               ) : paginated.map((entrepot) => (
                 <tr key={entrepot.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className={styles.td}>
@@ -805,10 +810,11 @@ export default function EntrepotPage() {
                         <Building2 className="w-3 h-3" />
                       </div>
                       <div>
-                        <span className="font-bold text-slate-800 text-xs">{entrepot.siteNom || `Entrepot #${entrepot.id}`}</span>
+                        <span className="font-bold text-slate-800 text-xs">{entrepot.nom || `Entrepot #${entrepot.id}`}</span>
                       </div>
                     </div>
                   </td>
+                  <td className={`${styles.td} font-medium text-slate-700`}>{entrepot.siteNom || "—"}</td>
                   <td className={`${styles.td} font-mono text-slate-600`}>{entrepot.telephone || "—"}</td>
                   <td className={`${styles.td} font-mono text-slate-500`}>{entrepot.fax || "—"}</td>
                   <td className={`${styles.td} text-slate-600`}>{entrepot.email || "—"}</td>
@@ -902,6 +908,13 @@ function FormModal({ formMode, formData, setFormData, sites, users, onSave, onCl
 
           <div className="p-5 space-y-4">
             {/* Nom */}
+            <div>
+              <label className={styles.label}>Nom de l'Entrepot</label>
+              <input type="text" value={formData.nom || ""} onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                placeholder="Nom d'entrepot..." className={styles.input} />
+            </div>
+
+            {/* Site */}
             <div>
               <label className={styles.label}>Site de l'Entrepot</label>
               <SearchableSelect
